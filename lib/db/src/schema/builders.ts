@@ -9,6 +9,7 @@ export const buildersTable = pgTable("builders", {
   verified: boolean("verified").notNull().default(false),
   stripeCustomerId: text("stripe_customer_id"),
   stripeSubscriptionId: text("stripe_subscription_id"),
+  stripeAccountId: text("stripe_account_id"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

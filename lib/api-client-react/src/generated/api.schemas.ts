@@ -75,7 +75,33 @@ export interface Tool {
   reviews: number;
   bgColor: string;
   category: string;
+  priceAmount?: number | null;
+  billingType?: string | null;
+  builderEmail?: string | null;
+  sales: number;
   createdAt: string;
+}
+
+export type CreateToolBodyBillingType = typeof CreateToolBodyBillingType[keyof typeof CreateToolBodyBillingType];
+
+
+export const CreateToolBodyBillingType = {
+  one_off: 'one_off',
+  monthly: 'monthly',
+} as const;
+
+export interface CreateToolBody {
+  name: string;
+  description: string;
+  /** Price in cents (e.g. 999 = $9.99) */
+  price: number;
+  billingType: CreateToolBodyBillingType;
+  builderEmail: string;
+  emoji: string;
+}
+
+export interface ToolBuyResponse {
+  checkoutUrl: string;
 }
 
 export interface Builder {

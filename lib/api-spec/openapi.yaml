@@ -235,6 +235,54 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Tool"
+    post:
+      operationId: createTool
+      tags: [tools]
+      summary: Create a tool listing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateToolBody"
+      responses:
+        "201":
+          description: Tool created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tool"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /tools/{id}/buy:
+    post:
+      operationId: buyTool
+      tags: [tools]
+      summary: Create a Stripe Checkout session to buy or subscribe to a tool
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Checkout URL
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolBuyResponse"
+        "404":
+          description: Tool not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
 components:
   schemas:
@@ -384,6 +432,17 @@ components:
           type: string
         category:
           type: string
+        priceAmount:
+          type: integer
+          nullable: true
+        billingType:
+          type: string
+          nullable: true
+        builderEmail:
+          type: string
+          nullable: true
+        sales:
+          type: integer
         createdAt:
           type: string
           format: date-time
@@ -397,7 +456,42 @@ components:
         - reviews
         - bgColor
         - category
+        - sales
         - createdAt
+
+    CreateToolBody:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        price:
+          type: integer
+          description: Price in cents (e.g. 999 = $9.99)
+        billingType:
+          type: string
+          enum: [one_off, monthly]
+        builderEmail:
+          type: string
+          format: email
+        emoji:
+          type: string
+      required:
+        - name
+        - description
+        - price
+        - billingType
+        - builderEmail
+        - emoji
+
+    ToolBuyResponse:
+      type: object
+      properties:
+        checkoutUrl:
+          type: string
+      required:
+        - checkoutUrl
 
     Builder:
       type: object

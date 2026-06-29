@@ -5,8 +5,8 @@ import router from "./routes";
 import { logger } from "./lib/logger";
 import { WebhookHandlers } from "./webhookHandlers";
 import { db } from "@workspace/db";
-import { jobsTable, buildersTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import { jobsTable, buildersTable, toolsTable } from "@workspace/db";
+import { eq, sql } from "drizzle-orm";
 
 const app: Express = express();
 
@@ -30,7 +30,7 @@ app.post(
 
       if (event.type === "checkout.session.completed") {
         const session = event.data.object as {
-          metadata?: { type?: string; jobId?: string; builderEmail?: string };
+          metadata?: { type?: string; jobId?: string; builderEmail?: string; toolId?: string };
           customer?: string;
           subscription?: string;
         };
@@ -43,6 +43,17 @@ app.post(
               .set({ featured: true })
               .where(eq(jobsTable.id, jobId));
             logger.info({ jobId }, "Job marked as featured");
+          }
+        }
+
+        if (session.metadata?.type === "tool_purchase") {
+          const toolId = Number(session.metadata.toolId);
+          if (!isNaN(toolId)) {
+            await db
+              .update(toolsTable)
+              .set({ sales: sql`${toolsTable.sales} + 1` })
+              .where(eq(toolsTable.id, toolId));
+            logger.info({ toolId }, "Tool sale recorded");
           }
         }
 

@@ -186,8 +186,54 @@ export const ListToolsResponseItem = zod.object({
   "reviews": zod.number(),
   "bgColor": zod.string(),
   "category": zod.string(),
+  "priceAmount": zod.number().nullish(),
+  "billingType": zod.string().nullish(),
+  "builderEmail": zod.string().nullish(),
+  "sales": zod.number(),
   "createdAt": zod.coerce.date()
 })
 export const ListToolsResponse = zod.array(ListToolsResponseItem)
+
+
+/**
+ * @summary Create a tool listing
+ */
+export const CreateToolBody = zod.object({
+  "name": zod.string(),
+  "description": zod.string(),
+  "price": zod.number().describe('Price in cents (e.g. 999 = $9.99)'),
+  "billingType": zod.enum(['one_off', 'monthly']),
+  "builderEmail": zod.string().email(),
+  "emoji": zod.string()
+})
+
+export const CreateToolResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "emoji": zod.string(),
+  "description": zod.string(),
+  "price": zod.string(),
+  "rating": zod.string(),
+  "reviews": zod.number(),
+  "bgColor": zod.string(),
+  "category": zod.string(),
+  "priceAmount": zod.number().nullish(),
+  "billingType": zod.string().nullish(),
+  "builderEmail": zod.string().nullish(),
+  "sales": zod.number(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Create a Stripe Checkout session to buy or subscribe to a tool
+ */
+export const BuyToolParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const BuyToolResponse = zod.object({
+  "checkoutUrl": zod.string()
+})
 
 

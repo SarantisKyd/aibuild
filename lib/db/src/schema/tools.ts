@@ -8,10 +8,14 @@ export const toolsTable = pgTable("tools", {
   emoji: text("emoji").notNull(),
   description: text("description").notNull(),
   price: text("price").notNull(),
-  rating: text("rating").notNull(),
-  reviews: integer("reviews").notNull(),
-  bgColor: text("bg_color").notNull(),
+  rating: text("rating").notNull().default("5.0"),
+  reviews: integer("reviews").notNull().default(0),
+  bgColor: text("bg_color").notNull().default("#f3f4f6"),
   category: text("category").notNull().default("all"),
+  priceAmount: integer("price_amount"),
+  billingType: text("billing_type"),
+  builderEmail: text("builder_email"),
+  sales: integer("sales").notNull().default(0),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

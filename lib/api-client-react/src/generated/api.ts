@@ -26,12 +26,14 @@ import type {
   BuilderSubscribeResponse,
   CreateBidBody,
   CreateJobBody,
+  CreateToolBody,
   ErrorResponse,
   FeatureCheckoutResponse,
   HealthStatus,
   Job,
   ListJobsParams,
-  Tool
+  Tool,
+  ToolBuyResponse
 } from './api.schemas';
 
 import { customFetch } from '../custom-fetch';
@@ -734,4 +736,144 @@ export function useListTools<TData = Awaited<ReturnType<typeof listTools>>, TErr
 
 
 
+
+export const getCreateToolUrl = () => {
+
+
+
+
+  return `/api/tools`
+}
+
+/**
+ * @summary Create a tool listing
+ */
+export const createTool = async (createToolBody: CreateToolBody, options?: RequestInit): Promise<Tool> => {
+
+  return customFetch<Tool>(getCreateToolUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(createToolBody)
+  }
+);}
+
+
+
+
+export const getCreateToolMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createTool>>, TError,{data: BodyType<CreateToolBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createTool>>, TError,{data: BodyType<CreateToolBody>}, TContext> => {
+
+const mutationKey = ['createTool'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createTool>>, {data: BodyType<CreateToolBody>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createTool(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateToolMutationResult = NonNullable<Awaited<ReturnType<typeof createTool>>>
+    export type CreateToolMutationBody = BodyType<CreateToolBody>
+    export type CreateToolMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Create a tool listing
+ */
+export const useCreateTool = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createTool>>, TError,{data: BodyType<CreateToolBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createTool>>,
+        TError,
+        {data: BodyType<CreateToolBody>},
+        TContext
+      > => {
+      return useMutation(getCreateToolMutationOptions(options));
+    }
+
+export const getBuyToolUrl = (id: number,) => {
+
+
+
+
+  return `/api/tools/${id}/buy`
+}
+
+/**
+ * @summary Create a Stripe Checkout session to buy or subscribe to a tool
+ */
+export const buyTool = async (id: number, options?: RequestInit): Promise<ToolBuyResponse> => {
+
+  return customFetch<ToolBuyResponse>(getBuyToolUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getBuyToolMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof buyTool>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof buyTool>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['buyTool'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof buyTool>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  buyTool(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type BuyToolMutationResult = NonNullable<Awaited<ReturnType<typeof buyTool>>>
+
+    export type BuyToolMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Create a Stripe Checkout session to buy or subscribe to a tool
+ */
+export const useBuyTool = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof buyTool>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof buyTool>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getBuyToolMutationOptions(options));
+    }
 
