@@ -21,6 +21,9 @@ import type {
 
 import type {
   Bid,
+  Builder,
+  BuilderSubscribeBody,
+  BuilderSubscribeResponse,
   CreateBidBody,
   CreateJobBody,
   ErrorResponse,
@@ -506,6 +509,153 @@ export const useSubmitBid = <TError = ErrorType<ErrorResponse>,
         TContext
       > => {
       return useMutation(getSubmitBidMutationOptions(options));
+    }
+
+export const getGetBuilderUrl = (email: string,) => {
+
+
+
+
+  return `/api/builders/${email}`
+}
+
+/**
+ * @summary Get a builder profile by email
+ */
+export const getBuilder = async (email: string, options?: RequestInit): Promise<Builder> => {
+
+  return customFetch<Builder>(getGetBuilderUrl(email),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetBuilderQueryKey = (email: string,) => {
+    return [
+    `/api/builders/${email}`
+    ] as const;
+    }
+
+
+export const getGetBuilderQueryOptions = <TData = Awaited<ReturnType<typeof getBuilder>>, TError = ErrorType<ErrorResponse>>(email: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getBuilder>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetBuilderQueryKey(email);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getBuilder>>> = ({ signal }) => getBuilder(email, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: email !== null && email !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getBuilder>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetBuilderQueryResult = NonNullable<Awaited<ReturnType<typeof getBuilder>>>
+export type GetBuilderQueryError = ErrorType<ErrorResponse>
+
+
+/**
+ * @summary Get a builder profile by email
+ */
+
+export function useGetBuilder<TData = Awaited<ReturnType<typeof getBuilder>>, TError = ErrorType<ErrorResponse>>(
+ email: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getBuilder>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetBuilderQueryOptions(email,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getSubscribBuilderUrl = () => {
+
+
+
+
+  return `/api/builders/subscribe`
+}
+
+/**
+ * @summary Create a Stripe Checkout subscription session for $9/month verified builder
+ */
+export const subscribBuilder = async (builderSubscribeBody: BuilderSubscribeBody, options?: RequestInit): Promise<BuilderSubscribeResponse> => {
+
+  return customFetch<BuilderSubscribeResponse>(getSubscribBuilderUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(builderSubscribeBody)
+  }
+);}
+
+
+
+
+export const getSubscribBuilderMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof subscribBuilder>>, TError,{data: BodyType<BuilderSubscribeBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof subscribBuilder>>, TError,{data: BodyType<BuilderSubscribeBody>}, TContext> => {
+
+const mutationKey = ['subscribBuilder'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof subscribBuilder>>, {data: BodyType<BuilderSubscribeBody>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  subscribBuilder(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SubscribBuilderMutationResult = NonNullable<Awaited<ReturnType<typeof subscribBuilder>>>
+    export type SubscribBuilderMutationBody = BodyType<BuilderSubscribeBody>
+    export type SubscribBuilderMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Create a Stripe Checkout subscription session for $9/month verified builder
+ */
+export const useSubscribBuilder = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof subscribBuilder>>, TError,{data: BodyType<BuilderSubscribeBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof subscribBuilder>>,
+        TError,
+        {data: BodyType<BuilderSubscribeBody>},
+        TContext
+      > => {
+      return useMutation(getSubscribBuilderMutationOptions(options));
     }
 
 export const getListToolsUrl = () => {

@@ -143,6 +143,37 @@ export const SubmitBidResponse = zod.object({
 
 
 /**
+ * @summary Get a builder profile by email
+ */
+export const GetBuilderParams = zod.object({
+  "email": zod.coerce.string()
+})
+
+export const GetBuilderResponse = zod.object({
+  "id": zod.number(),
+  "email": zod.string(),
+  "name": zod.string(),
+  "verified": zod.boolean(),
+  "stripeCustomerId": zod.string().nullish(),
+  "stripeSubscriptionId": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Create a Stripe Checkout subscription session for $9/month verified builder
+ */
+export const SubscribBuilderBody = zod.object({
+  "email": zod.string().email(),
+  "name": zod.string().optional()
+})
+
+export const SubscribBuilderResponse = zod.object({
+  "checkoutUrl": zod.string()
+})
+
+
+/**
  * @summary List all tools
  */
 export const ListToolsResponseItem = zod.object({

@@ -78,6 +78,25 @@ export interface Tool {
   createdAt: string;
 }
 
+export interface Builder {
+  id: number;
+  email: string;
+  name: string;
+  verified: boolean;
+  stripeCustomerId?: string | null;
+  stripeSubscriptionId?: string | null;
+  createdAt: string;
+}
+
+export interface BuilderSubscribeBody {
+  email: string;
+  name?: string;
+}
+
+export interface BuilderSubscribeResponse {
+  checkoutUrl: string;
+}
+
 export interface FeatureCheckoutResponse {
   checkoutUrl: string;
 }

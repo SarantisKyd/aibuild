@@ -5,7 +5,7 @@ import router from "./routes";
 import { logger } from "./lib/logger";
 import { WebhookHandlers } from "./webhookHandlers";
 import { db } from "@workspace/db";
-import { jobsTable } from "@workspace/db";
+import { jobsTable, buildersTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 
 const app: Express = express();
@@ -30,8 +30,11 @@ app.post(
 
       if (event.type === "checkout.session.completed") {
         const session = event.data.object as {
-          metadata?: { type?: string; jobId?: string };
+          metadata?: { type?: string; jobId?: string; builderEmail?: string };
+          customer?: string;
+          subscription?: string;
         };
+
         if (session.metadata?.type === "featured_listing") {
           const jobId = Number(session.metadata.jobId);
           if (!isNaN(jobId)) {
@@ -41,6 +44,32 @@ app.post(
               .where(eq(jobsTable.id, jobId));
             logger.info({ jobId }, "Job marked as featured");
           }
+        }
+
+        if (session.metadata?.type === "builder_subscription") {
+          const builderEmail = session.metadata.builderEmail;
+          if (builderEmail) {
+            await db
+              .update(buildersTable)
+              .set({
+                verified: true,
+                stripeCustomerId: session.customer ?? null,
+                stripeSubscriptionId: session.subscription ?? null,
+              })
+              .where(eq(buildersTable.email, builderEmail));
+            logger.info({ builderEmail }, "Builder marked as verified");
+          }
+        }
+      }
+
+      if (event.type === "customer.subscription.deleted") {
+        const subscription = event.data.object as { customer?: string };
+        if (subscription.customer) {
+          await db
+            .update(buildersTable)
+            .set({ verified: false, stripeSubscriptionId: null })
+            .where(eq(buildersTable.stripeCustomerId, subscription.customer));
+          logger.info({ customerId: subscription.customer }, "Builder subscription cancelled — verified removed");
         }
       }
 
@@ -58,16 +87,10 @@ app.use(
     logger,
     serializers: {
       req(req) {
-        return {
-          id: req.id,
-          method: req.method,
-          url: req.url?.split("?")[0],
-        };
+        return { id: req.id, method: req.method, url: req.url?.split("?")[0] };
       },
       res(res) {
-        return {
-          statusCode: res.statusCode,
-        };
+        return { statusCode: res.statusCode };
       },
     },
   }),

@@ -8,6 +8,7 @@ import Home from "@/pages/home";
 import Board from "@/pages/board";
 import PostJob from "@/pages/post";
 import Tools from "@/pages/tools";
+import Builder from "@/pages/builder";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient();
@@ -19,6 +20,7 @@ function Router() {
       <Route path="/board" component={Board} />
       <Route path="/post" component={PostJob} />
       <Route path="/tools" component={Tools} />
+      <Route path="/builder" component={Builder} />
       <Route component={NotFound} />
     </Switch>
   );

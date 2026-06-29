@@ -16,6 +16,8 @@ tags:
     description: Bid operations
   - name: tools
     description: Tool marketplace operations
+  - name: builders
+    description: Builder profile and subscription operations
 paths:
   /healthz:
     get:
@@ -164,6 +166,56 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
         "404":
           description: Job not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /builders/{email}:
+    get:
+      operationId: getBuilder
+      tags: [builders]
+      summary: Get a builder profile by email
+      parameters:
+        - name: email
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Builder profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Builder"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /builders/subscribe:
+    post:
+      operationId: subscribBuilder
+      tags: [builders]
+      summary: Create a Stripe Checkout subscription session for $9/month verified builder
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BuilderSubscribeBody"
+      responses:
+        "200":
+          description: Stripe Checkout URL
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BuilderSubscribeResponse"
+        "400":
+          description: Validation error
           content:
             application/json:
               schema:
@@ -346,6 +398,52 @@ components:
         - bgColor
         - category
         - createdAt
+
+    Builder:
+      type: object
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+        name:
+          type: string
+        verified:
+          type: boolean
+        stripeCustomerId:
+          type: string
+          nullable: true
+        stripeSubscriptionId:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - email
+        - name
+        - verified
+        - createdAt
+
+    BuilderSubscribeBody:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+      required:
+        - email
+
+    BuilderSubscribeResponse:
+      type: object
+      properties:
+        checkoutUrl:
+          type: string
+      required:
+        - checkoutUrl
 
     FeatureCheckoutResponse:
       type: object

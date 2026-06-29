@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -29,10 +29,36 @@ export default function Board() {
   const [bidPrice, setBidPrice] = useState("");
   const [bidTime, setBidTime] = useState("");
   const [bidNote, setBidNote] = useState("");
+  const [builderEmail, setBuilderEmail] = useState("");
+  const [isVerifiedBuilder, setIsVerifiedBuilder] = useState(false);
 
   const { data: jobs = [], isLoading } = useListJobs(
     activeFilter !== "all" ? { category: activeFilter as ListJobsCategory } : undefined
   );
+
+  const emailCheckRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (!builderEmail || !builderEmail.includes("@")) {
+      setIsVerifiedBuilder(false);
+      return;
+    }
+    if (emailCheckRef.current) clearTimeout(emailCheckRef.current);
+    emailCheckRef.current = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/builders/${encodeURIComponent(builderEmail.toLowerCase())}`);
+        if (res.ok) {
+          const data = await res.json();
+          setIsVerifiedBuilder(!!data.verified);
+        } else {
+          setIsVerifiedBuilder(false);
+        }
+      } catch {
+        setIsVerifiedBuilder(false);
+      }
+    }, 500);
+    return () => { if (emailCheckRef.current) clearTimeout(emailCheckRef.current); };
+  }, [builderEmail]);
 
   const submitBidMutation = useSubmitBid({
     mutation: {
@@ -43,6 +69,8 @@ export default function Board() {
         setBidPrice("");
         setBidTime("");
         setBidNote("");
+        setBuilderEmail("");
+        setIsVerifiedBuilder(false);
       },
       onError: () => {
         toast({ title: "Error", description: "Failed to submit bid. Please try again.", variant: "destructive" });
@@ -169,6 +197,24 @@ export default function Board() {
               <div className="border-t pt-6">
                 <h3 className="font-semibold text-lg mb-4">Submit your bid</h3>
                 <form onSubmit={handleSubmitBid} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="bid-email">Your email (optional — shows Verified badge)</Label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        id="bid-email"
+                        type="email"
+                        placeholder="you@example.com"
+                        value={builderEmail}
+                        onChange={(e) => setBuilderEmail(e.target.value)}
+                        data-testid="input-bid-email"
+                      />
+                      {isVerifiedBuilder && (
+                        <Badge className="bg-blue-600 hover:bg-blue-700 text-white gap-1 whitespace-nowrap">
+                          ✓ Verified
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="bid-price">Your price ($)</Label>
