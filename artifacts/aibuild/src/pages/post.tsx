@@ -28,6 +28,7 @@ export default function PostJob() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
+  const [email, setEmail] = useState("");
   const [title, setTitle] = useState("");
   const [budget, setBudget] = useState("");
   const [desc, setDesc] = useState("");
@@ -56,7 +57,7 @@ export default function PostJob() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim() || !budget || !desc.trim() || !deadline || !category) {
+    if (!email.trim() || !title.trim() || !budget || !desc.trim() || !deadline || !category) {
       toast({ title: "Missing fields", description: "Please fill out all required fields.", variant: "destructive" });
       return;
     }
@@ -142,6 +143,19 @@ export default function PostJob() {
       <Card>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-6 pt-6">
+            <div className="space-y-2">
+              <Label htmlFor="email">Your email</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="you@email.com"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                data-testid="input-post-email"
+              />
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="title">Job Title</Label>
               <Input
