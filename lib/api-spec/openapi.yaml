@@ -10,6 +10,12 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: jobs
+    description: Job board operations
+  - name: bids
+    description: Bid operations
+  - name: tools
+    description: Tool marketplace operations
 paths:
   /healthz:
     get:
@@ -24,6 +30,129 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /jobs:
+    get:
+      operationId: listJobs
+      tags: [jobs]
+      summary: List all jobs
+      parameters:
+        - name: category
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [all, web, automation, agent, data]
+      responses:
+        "200":
+          description: List of jobs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Job"
+    post:
+      operationId: createJob
+      tags: [jobs]
+      summary: Post a new job
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateJobBody"
+      responses:
+        "201":
+          description: Created job
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Job"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /jobs/{id}:
+    get:
+      operationId: getJob
+      tags: [jobs]
+      summary: Get a job by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Job detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Job"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /jobs/{id}/bids:
+    post:
+      operationId: submitBid
+      tags: [bids]
+      summary: Submit a bid on a job
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateBidBody"
+      responses:
+        "201":
+          description: Bid submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Bid"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Job not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /tools:
+    get:
+      operationId: listTools
+      tags: [tools]
+      summary: List all tools
+      responses:
+        "200":
+          description: List of tools
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Tool"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +163,160 @@ components:
       required:
         - status
 
+    Job:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        budget:
+          type: integer
+        deadline:
+          type: string
+        category:
+          type: string
+        skills:
+          type: array
+          items:
+            type: string
+        urgent:
+          type: boolean
+        isNew:
+          type: boolean
+        bids:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - title
+        - description
+        - budget
+        - deadline
+        - category
+        - skills
+        - urgent
+        - isNew
+        - bids
+        - createdAt
+
+    CreateJobBody:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 3
+        description:
+          type: string
+          minLength: 10
+        budget:
+          type: integer
+          minimum: 10
+        deadline:
+          type: string
+        category:
+          type: string
+          enum: [web, automation, agent, data]
+        skills:
+          type: array
+          items:
+            type: string
+        urgent:
+          type: boolean
+        isNew:
+          type: boolean
+      required:
+        - title
+        - description
+        - budget
+        - deadline
+        - category
+        - skills
+
+    Bid:
+      type: object
+      properties:
+        id:
+          type: integer
+        jobId:
+          type: integer
+        price:
+          type: integer
+        deliveryTime:
+          type: string
+        coverNote:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - jobId
+        - price
+        - deliveryTime
+        - coverNote
+        - createdAt
+
+    CreateBidBody:
+      type: object
+      properties:
+        price:
+          type: integer
+          minimum: 1
+        deliveryTime:
+          type: string
+        coverNote:
+          type: string
+          minLength: 10
+      required:
+        - price
+        - deliveryTime
+        - coverNote
+
+    Tool:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        emoji:
+          type: string
+        description:
+          type: string
+        price:
+          type: string
+        rating:
+          type: string
+        reviews:
+          type: integer
+        bgColor:
+          type: string
+        category:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - emoji
+        - description
+        - price
+        - rating
+        - reviews
+        - bgColor
+        - category
+        - createdAt
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
