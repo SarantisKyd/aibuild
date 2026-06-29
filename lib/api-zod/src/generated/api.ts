@@ -36,6 +36,7 @@ export const ListJobsResponseItem = zod.object({
   "isNew": zod.boolean(),
   "bids": zod.number(),
   "featured": zod.boolean(),
+  "status": zod.string(),
   "createdAt": zod.coerce.date()
 })
 export const ListJobsResponse = zod.array(ListJobsResponseItem)
@@ -64,6 +65,7 @@ export const CreateJobBody = zod.object({
 })
 
 export const CreateJobResponse = zod.object({
+  "job": zod.object({
   "id": zod.number(),
   "title": zod.string(),
   "description": zod.string(),
@@ -75,7 +77,22 @@ export const CreateJobResponse = zod.object({
   "isNew": zod.boolean(),
   "bids": zod.number(),
   "featured": zod.boolean(),
+  "status": zod.string(),
   "createdAt": zod.coerce.date()
+}),
+  "checkoutUrl": zod.string().nullish()
+})
+
+
+/**
+ * @summary Create a Stripe Checkout session to fund a job in escrow
+ */
+export const FundJobParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const FundJobResponse = zod.object({
+  "checkoutUrl": zod.string()
 })
 
 
@@ -98,6 +115,7 @@ export const GetJobResponse = zod.object({
   "isNew": zod.boolean(),
   "bids": zod.number(),
   "featured": zod.boolean(),
+  "status": zod.string(),
   "createdAt": zod.coerce.date()
 })
 

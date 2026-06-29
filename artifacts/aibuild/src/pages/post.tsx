@@ -41,7 +41,13 @@ export default function PostJob() {
     mutation: {
       onSuccess: (data) => {
         queryClient.invalidateQueries({ queryKey: getListJobsQueryKey() });
-        setPostedJobId(data.id);
+        const checkoutUrl = (data as { checkoutUrl?: string | null }).checkoutUrl;
+        if (checkoutUrl) {
+          window.location.href = checkoutUrl;
+        } else {
+          const job = (data as { job?: { id: number } }).job;
+          setPostedJobId(job?.id ?? (data as { id?: number }).id ?? null);
+        }
       },
       onError: () => {
         toast({ title: "Error", description: "Failed to post job. Please try again.", variant: "destructive" });

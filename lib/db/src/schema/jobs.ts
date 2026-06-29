@@ -14,6 +14,7 @@ export const jobsTable = pgTable("jobs", {
   isNew: boolean("is_new").notNull().default(true),
   bids: integer("bids").notNull().default(0),
   featured: boolean("featured").notNull().default(false),
+  status: text("status").notNull().default("open"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

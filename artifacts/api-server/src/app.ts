@@ -46,6 +46,17 @@ app.post(
           }
         }
 
+        if (session.metadata?.type === "escrow_fund") {
+          const jobId = Number(session.metadata.jobId);
+          if (!isNaN(jobId)) {
+            await db
+              .update(jobsTable)
+              .set({ status: "funded" })
+              .where(eq(jobsTable.id, jobId));
+            logger.info({ jobId }, "Job marked as funded");
+          }
+        }
+
         if (session.metadata?.type === "tool_purchase") {
           const toolId = Number(session.metadata.toolId);
           if (!isNaN(toolId)) {

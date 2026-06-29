@@ -66,13 +66,38 @@ paths:
               $ref: "#/components/schemas/CreateJobBody"
       responses:
         "201":
-          description: Created job
+          description: Created job with Stripe checkout URL
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Job"
+                $ref: "#/components/schemas/CreateJobResponse"
         "400":
           description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /jobs/{id}/fund:
+    post:
+      operationId: fundJob
+      tags: [jobs]
+      summary: Create a Stripe Checkout session to fund a job in escrow
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Stripe Checkout URL
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FundJobResponse"
+        "404":
+          description: Job not found
           content:
             application/json:
               schema:
@@ -321,6 +346,8 @@ components:
           type: integer
         featured:
           type: boolean
+        status:
+          type: string
         createdAt:
           type: string
           format: date-time
@@ -336,7 +363,27 @@ components:
         - isNew
         - bids
         - featured
+        - status
         - createdAt
+
+    CreateJobResponse:
+      type: object
+      properties:
+        job:
+          $ref: "#/components/schemas/Job"
+        checkoutUrl:
+          type: string
+          nullable: true
+      required:
+        - job
+
+    FundJobResponse:
+      type: object
+      properties:
+        checkoutUrl:
+          type: string
+      required:
+        - checkoutUrl
 
     CreateJobBody:
       type: object

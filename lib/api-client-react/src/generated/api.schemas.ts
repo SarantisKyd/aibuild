@@ -21,7 +21,17 @@ export interface Job {
   isNew: boolean;
   bids: number;
   featured: boolean;
+  status: string;
   createdAt: string;
+}
+
+export interface CreateJobResponse {
+  job: Job;
+  checkoutUrl?: string | null;
+}
+
+export interface FundJobResponse {
+  checkoutUrl: string;
 }
 
 export type CreateJobBodyCategory = typeof CreateJobBodyCategory[keyof typeof CreateJobBodyCategory];

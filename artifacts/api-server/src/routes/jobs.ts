@@ -25,6 +25,37 @@ router.get("/jobs", async (req, res) => {
   res.json(ListJobsResponse.parse(jobs));
 });
 
+async function createFundCheckout(job: { id: number; title: string; budget: number }, origin: string): Promise<string | null> {
+  try {
+    const stripe = await getUncachableStripeClient();
+    const appUrl = process.env.APP_URL?.replace(/\/$/, "") ?? origin;
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ["card"],
+      line_items: [
+        {
+          price_data: {
+            currency: "usd",
+            product_data: {
+              name: `Escrow: ${job.title}`,
+              description: "Funds held in escrow until the job is completed",
+            },
+            unit_amount: job.budget * 100,
+          },
+          quantity: 1,
+        },
+      ],
+      mode: "payment",
+      success_url: `${appUrl}/?funded=${job.id}`,
+      cancel_url: `${appUrl}/?cancelled=${job.id}`,
+      metadata: { jobId: String(job.id), type: "escrow_fund" },
+    });
+    return session.url;
+  } catch (err) {
+    console.log("[fund] Stripe error:", err instanceof Error ? err.message : String(err));
+    return null;
+  }
+}
+
 router.post("/jobs", async (req, res) => {
   console.log("[POST /api/jobs] request body:", JSON.stringify(req.body, null, 2));
   const parsed = CreateJobBody.safeParse(req.body);
@@ -34,17 +65,27 @@ router.post("/jobs", async (req, res) => {
     return;
   }
   try {
-    const validated = insertJobSchema.parse({
-      ...parsed.data,
-      isNew: true,
-    });
+    const validated = insertJobSchema.parse({ ...parsed.data, isNew: true });
     const [job] = await db.insert(jobsTable).values(validated).returning();
     console.log("[POST /api/jobs] job created:", JSON.stringify(job, null, 2));
-    res.status(201).json(job);
+    const origin = req.headers.origin ?? `https://${req.headers.host}`;
+    const checkoutUrl = await createFundCheckout(job, origin);
+    res.status(201).json({ job, checkoutUrl });
   } catch (err) {
     console.log("[POST /api/jobs] error:", err instanceof Error ? err.message : String(err));
     throw err;
   }
+});
+
+router.post("/jobs/:id/fund", async (req, res) => {
+  const jobId = Number(req.params.id);
+  if (isNaN(jobId)) { res.status(400).json({ error: "Invalid job id" }); return; }
+  const [job] = await db.select().from(jobsTable).where(eq(jobsTable.id, jobId));
+  if (!job) { res.status(404).json({ error: "Job not found" }); return; }
+  const origin = req.headers.origin ?? `https://${req.headers.host}`;
+  const checkoutUrl = await createFundCheckout(job, origin);
+  if (!checkoutUrl) { res.status(500).json({ error: "Could not create checkout session" }); return; }
+  res.json({ checkoutUrl });
 });
 
 router.get("/jobs/:id", async (req, res) => {

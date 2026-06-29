@@ -26,9 +26,11 @@ import type {
   BuilderSubscribeResponse,
   CreateBidBody,
   CreateJobBody,
+  CreateJobResponse,
   CreateToolBody,
   ErrorResponse,
   FeatureCheckoutResponse,
+  FundJobResponse,
   HealthStatus,
   Job,
   ListJobsParams,
@@ -236,9 +238,9 @@ export const getCreateJobUrl = () => {
 /**
  * @summary Post a new job
  */
-export const createJob = async (createJobBody: CreateJobBody, options?: RequestInit): Promise<Job> => {
+export const createJob = async (createJobBody: CreateJobBody, options?: RequestInit): Promise<CreateJobResponse> => {
 
-  return customFetch<Job>(getCreateJobUrl(),
+  return customFetch<CreateJobResponse>(getCreateJobUrl(),
   {
     ...options,
     method: 'POST',
@@ -293,6 +295,76 @@ export const useCreateJob = <TError = ErrorType<ErrorResponse>,
         TContext
       > => {
       return useMutation(getCreateJobMutationOptions(options));
+    }
+
+export const getFundJobUrl = (id: number,) => {
+
+
+
+
+  return `/api/jobs/${id}/fund`
+}
+
+/**
+ * @summary Create a Stripe Checkout session to fund a job in escrow
+ */
+export const fundJob = async (id: number, options?: RequestInit): Promise<FundJobResponse> => {
+
+  return customFetch<FundJobResponse>(getFundJobUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getFundJobMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof fundJob>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof fundJob>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['fundJob'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof fundJob>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  fundJob(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type FundJobMutationResult = NonNullable<Awaited<ReturnType<typeof fundJob>>>
+
+    export type FundJobMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Create a Stripe Checkout session to fund a job in escrow
+ */
+export const useFundJob = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof fundJob>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof fundJob>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getFundJobMutationOptions(options));
     }
 
 export const getGetJobUrl = (id: number,) => {
