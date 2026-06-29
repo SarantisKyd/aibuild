@@ -13,6 +13,7 @@ export const jobsTable = pgTable("jobs", {
   urgent: boolean("urgent").notNull().default(false),
   isNew: boolean("is_new").notNull().default(true),
   bids: integer("bids").notNull().default(0),
+  featured: boolean("featured").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

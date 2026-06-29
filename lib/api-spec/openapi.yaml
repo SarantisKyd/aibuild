@@ -101,6 +101,37 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /jobs/{id}/feature:
+    post:
+      operationId: featureJob
+      tags: [jobs]
+      summary: Create a Stripe Checkout session to feature a job listing for $15
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Stripe Checkout URL
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FeatureCheckoutResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Job not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /jobs/{id}/bids:
     post:
       operationId: submitBid
@@ -188,6 +219,8 @@ components:
           type: boolean
         bids:
           type: integer
+        featured:
+          type: boolean
         createdAt:
           type: string
           format: date-time
@@ -202,6 +235,7 @@ components:
         - urgent
         - isNew
         - bids
+        - featured
         - createdAt
 
     CreateJobBody:
@@ -312,6 +346,14 @@ components:
         - bgColor
         - category
         - createdAt
+
+    FeatureCheckoutResponse:
+      type: object
+      properties:
+        checkoutUrl:
+          type: string
+      required:
+        - checkoutUrl
 
     ErrorResponse:
       type: object

@@ -33,13 +33,14 @@ export default function PostJob() {
   const [desc, setDesc] = useState("");
   const [deadline, setDeadline] = useState("");
   const [category, setCategory] = useState("");
+  const [postedJobId, setPostedJobId] = useState<number | null>(null);
+  const [featurePending, setFeaturePending] = useState(false);
 
   const createJobMutation = useCreateJob({
     mutation: {
-      onSuccess: () => {
+      onSuccess: (data) => {
         queryClient.invalidateQueries({ queryKey: getListJobsQueryKey() });
-        toast({ title: "Job posted!", description: "Builders will bid within hours." });
-        setTimeout(() => setLocation("/board"), 1200);
+        setPostedJobId(data.id);
       },
       onError: () => {
         toast({ title: "Error", description: "Failed to post job. Please try again.", variant: "destructive" });
@@ -72,6 +73,64 @@ export default function PostJob() {
       },
     });
   };
+
+  const handleFeature = async () => {
+    if (!postedJobId) return;
+    setFeaturePending(true);
+    try {
+      const res = await fetch(`/api/jobs/${postedJobId}/feature`, { method: "POST" });
+      const data = await res.json();
+      if (data.checkoutUrl) {
+        window.location.href = data.checkoutUrl;
+      } else {
+        toast({ title: "Error", description: data.error ?? "Could not start checkout.", variant: "destructive" });
+      }
+    } catch {
+      toast({ title: "Error", description: "Could not start checkout.", variant: "destructive" });
+    } finally {
+      setFeaturePending(false);
+    }
+  };
+
+  if (postedJobId !== null) {
+    return (
+      <div className="max-w-3xl mx-auto px-4 py-12 min-h-[calc(100vh-4rem)]">
+        <div className="mb-8 text-center">
+          <div className="text-4xl mb-4">🎉</div>
+          <h1 className="text-3xl font-bold tracking-tight">Job posted!</h1>
+          <p className="text-muted-foreground mt-2">Builders will start bidding within hours.</p>
+        </div>
+
+        <Card className="border-yellow-400 bg-yellow-50 dark:bg-yellow-950/20 mb-6">
+          <CardContent className="pt-6 pb-4">
+            <div className="flex flex-col sm:flex-row items-center gap-4">
+              <div className="text-3xl">⚡</div>
+              <div className="flex-1 text-center sm:text-left">
+                <p className="font-semibold text-base">Get 3× more bids — feature your job for $15</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Featured jobs appear at the top of the board with a gold badge, seen by every builder.
+                </p>
+              </div>
+              <Button
+                onClick={handleFeature}
+                disabled={featurePending}
+                className="bg-yellow-500 hover:bg-yellow-600 text-white shrink-0"
+                data-testid="btn-feature-job"
+              >
+                {featurePending ? "Loading…" : "Feature for $15"}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="text-center">
+          <Button variant="outline" onClick={() => setLocation("/board")}>
+            Go to job board
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-12 min-h-[calc(100vh-4rem)]">

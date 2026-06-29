@@ -24,6 +24,7 @@ import type {
   CreateBidBody,
   CreateJobBody,
   ErrorResponse,
+  FeatureCheckoutResponse,
   HealthStatus,
   Job,
   ListJobsParams,
@@ -365,6 +366,76 @@ export function useGetJob<TData = Awaited<ReturnType<typeof getJob>>, TError = E
 
 
 
+
+export const getFeatureJobUrl = (id: number,) => {
+
+
+
+
+  return `/api/jobs/${id}/feature`
+}
+
+/**
+ * @summary Create a Stripe Checkout session to feature a job listing for $15
+ */
+export const featureJob = async (id: number, options?: RequestInit): Promise<FeatureCheckoutResponse> => {
+
+  return customFetch<FeatureCheckoutResponse>(getFeatureJobUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getFeatureJobMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof featureJob>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof featureJob>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['featureJob'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof featureJob>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  featureJob(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type FeatureJobMutationResult = NonNullable<Awaited<ReturnType<typeof featureJob>>>
+
+    export type FeatureJobMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Create a Stripe Checkout session to feature a job listing for $15
+ */
+export const useFeatureJob = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof featureJob>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof featureJob>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getFeatureJobMutationOptions(options));
+    }
 
 export const getSubmitBidUrl = (id: number,) => {
 

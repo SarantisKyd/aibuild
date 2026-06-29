@@ -1,8 +1,9 @@
 import { Router, type IRouter } from "express";
 import { db } from "@workspace/db";
 import { jobsTable, bidsTable, insertJobSchema, insertBidSchema } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import { eq, desc, sql } from "drizzle-orm";
 import { ListJobsResponse, CreateJobBody, SubmitBidBody } from "@workspace/api-zod";
+import { getUncachableStripeClient } from "../stripeClient";
 
 const router: IRouter = Router();
 
@@ -14,9 +15,12 @@ router.get("/jobs", async (req, res) => {
       .select()
       .from(jobsTable)
       .where(eq(jobsTable.category, category))
-      .orderBy(jobsTable.createdAt);
+      .orderBy(desc(jobsTable.featured), jobsTable.createdAt);
   } else {
-    jobs = await db.select().from(jobsTable).orderBy(jobsTable.createdAt);
+    jobs = await db
+      .select()
+      .from(jobsTable)
+      .orderBy(desc(jobsTable.featured), jobsTable.createdAt);
   }
   res.json(ListJobsResponse.parse(jobs));
 });
@@ -72,6 +76,52 @@ router.post("/jobs/:id/bids", async (req, res) => {
     .set({ bids: job.bids + 1 })
     .where(eq(jobsTable.id, jobId));
   res.status(201).json(bid);
+});
+
+router.post("/jobs/:id/feature", async (req, res) => {
+  const jobId = Number(req.params.id);
+  if (isNaN(jobId)) {
+    res.status(400).json({ error: "Invalid job id" });
+    return;
+  }
+  const [job] = await db.select().from(jobsTable).where(eq(jobsTable.id, jobId));
+  if (!job) {
+    res.status(404).json({ error: "Job not found" });
+    return;
+  }
+  if (job.featured) {
+    res.status(400).json({ error: "Job is already featured" });
+    return;
+  }
+
+  const stripe = await getUncachableStripeClient();
+  const appUrl = `https://${process.env.REPLIT_DOMAINS?.split(",")[0]}`;
+
+  const session = await stripe.checkout.sessions.create({
+    payment_method_types: ["card"],
+    line_items: [
+      {
+        price_data: {
+          currency: "usd",
+          product_data: {
+            name: "Featured Listing",
+            description: `Feature "${job.title}" — get 3× more bids by appearing at the top`,
+          },
+          unit_amount: 1500,
+        },
+        quantity: 1,
+      },
+    ],
+    mode: "payment",
+    success_url: `${appUrl}/board?featured=${jobId}`,
+    cancel_url: `${appUrl}/board`,
+    metadata: {
+      type: "featured_listing",
+      jobId: String(jobId),
+    },
+  });
+
+  res.json({ checkoutUrl: session.url });
 });
 
 export default router;

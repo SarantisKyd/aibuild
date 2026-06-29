@@ -35,6 +35,7 @@ export const ListJobsResponseItem = zod.object({
   "urgent": zod.boolean(),
   "isNew": zod.boolean(),
   "bids": zod.number(),
+  "featured": zod.boolean(),
   "createdAt": zod.coerce.date()
 })
 export const ListJobsResponse = zod.array(ListJobsResponseItem)
@@ -73,6 +74,7 @@ export const CreateJobResponse = zod.object({
   "urgent": zod.boolean(),
   "isNew": zod.boolean(),
   "bids": zod.number(),
+  "featured": zod.boolean(),
   "createdAt": zod.coerce.date()
 })
 
@@ -95,7 +97,20 @@ export const GetJobResponse = zod.object({
   "urgent": zod.boolean(),
   "isNew": zod.boolean(),
   "bids": zod.number(),
+  "featured": zod.boolean(),
   "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Create a Stripe Checkout session to feature a job listing for $15
+ */
+export const FeatureJobParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const FeatureJobResponse = zod.object({
+  "checkoutUrl": zod.string()
 })
 
 

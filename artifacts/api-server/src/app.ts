@@ -3,8 +3,55 @@ import cors from "cors";
 import pinoHttp from "pino-http";
 import router from "./routes";
 import { logger } from "./lib/logger";
+import { WebhookHandlers } from "./webhookHandlers";
+import { db } from "@workspace/db";
+import { jobsTable } from "@workspace/db";
+import { eq } from "drizzle-orm";
 
 const app: Express = express();
+
+app.post(
+  "/api/stripe/webhook",
+  express.raw({ type: "application/json" }),
+  async (req, res) => {
+    const signature = req.headers["stripe-signature"];
+    if (!signature) {
+      res.status(400).json({ error: "Missing stripe-signature" });
+      return;
+    }
+    const sig = Array.isArray(signature) ? signature[0] : signature;
+    try {
+      await WebhookHandlers.processWebhook(req.body as Buffer, sig);
+
+      const event = JSON.parse((req.body as Buffer).toString()) as {
+        type: string;
+        data: { object: Record<string, unknown> };
+      };
+
+      if (event.type === "checkout.session.completed") {
+        const session = event.data.object as {
+          metadata?: { type?: string; jobId?: string };
+        };
+        if (session.metadata?.type === "featured_listing") {
+          const jobId = Number(session.metadata.jobId);
+          if (!isNaN(jobId)) {
+            await db
+              .update(jobsTable)
+              .set({ featured: true })
+              .where(eq(jobsTable.id, jobId));
+            logger.info({ jobId }, "Job marked as featured");
+          }
+        }
+      }
+
+      res.status(200).json({ received: true });
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : String(error);
+      logger.error({ error: msg }, "Webhook processing error");
+      res.status(400).json({ error: "Webhook processing error" });
+    }
+  }
+);
 
 app.use(
   pinoHttp({

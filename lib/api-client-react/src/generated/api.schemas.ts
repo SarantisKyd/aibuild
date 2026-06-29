@@ -20,6 +20,7 @@ export interface Job {
   urgent: boolean;
   isNew: boolean;
   bids: number;
+  featured: boolean;
   createdAt: string;
 }
 
@@ -75,6 +76,10 @@ export interface Tool {
   bgColor: string;
   category: string;
   createdAt: string;
+}
+
+export interface FeatureCheckoutResponse {
+  checkoutUrl: string;
 }
 
 export interface ErrorResponse {

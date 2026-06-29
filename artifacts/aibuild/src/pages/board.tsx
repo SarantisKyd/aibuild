@@ -111,6 +111,7 @@ export default function Board() {
                 <div className="flex justify-between items-start gap-4">
                   <div className="space-y-2 flex-1">
                     <div className="flex flex-wrap items-center gap-2 mb-1">
+                      {job.featured && <Badge className="bg-yellow-500 hover:bg-yellow-600 text-white text-xs">⭐ Featured</Badge>}
                       {job.urgent && <Badge variant="destructive" className="text-xs">Urgent</Badge>}
                       {job.isNew && <Badge className="bg-green-600 hover:bg-green-700 text-xs">New</Badge>}
                       <Badge variant="outline" className="text-xs">{job.deadline}</Badge>
