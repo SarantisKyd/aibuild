@@ -45,6 +45,8 @@ if (Number.isNaN(port) || port <= 0) {
 
 await initStripe();
 
+console.log(process.env.STRIPE_SECRET_KEY ? "Stripe loaded: YES" : "Stripe loaded: NO");
+
 app.listen(port, (err) => {
   if (err) {
     logger.error({ err }, "Error listening on port");
