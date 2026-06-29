@@ -26,17 +26,25 @@ router.get("/jobs", async (req, res) => {
 });
 
 router.post("/jobs", async (req, res) => {
+  console.log("[POST /api/jobs] request body:", JSON.stringify(req.body, null, 2));
   const parsed = CreateJobBody.safeParse(req.body);
   if (!parsed.success) {
+    console.log("[POST /api/jobs] validation error:", parsed.error.message);
     res.status(400).json({ error: parsed.error.message });
     return;
   }
-  const validated = insertJobSchema.parse({
-    ...parsed.data,
-    isNew: true,
-  });
-  const [job] = await db.insert(jobsTable).values(validated).returning();
-  res.status(201).json(job);
+  try {
+    const validated = insertJobSchema.parse({
+      ...parsed.data,
+      isNew: true,
+    });
+    const [job] = await db.insert(jobsTable).values(validated).returning();
+    console.log("[POST /api/jobs] job created:", JSON.stringify(job, null, 2));
+    res.status(201).json(job);
+  } catch (err) {
+    console.log("[POST /api/jobs] error:", err instanceof Error ? err.message : String(err));
+    throw err;
+  }
 });
 
 router.get("/jobs/:id", async (req, res) => {
