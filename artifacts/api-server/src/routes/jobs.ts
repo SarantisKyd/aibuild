@@ -51,7 +51,7 @@ async function createFundCheckout(job: { id: number; title: string; budget: numb
     });
     return session.url;
   } catch (err) {
-    console.log("[fund] Stripe error:", err instanceof Error ? err.message : String(err));
+    console.error("Stripe error:", err instanceof Error ? err.message : String(err));
     return null;
   }
 }
