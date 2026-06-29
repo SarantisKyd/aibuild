@@ -104,8 +104,9 @@ export default function PostJob() {
       <div className="max-w-3xl mx-auto px-4 py-12 min-h-[calc(100vh-4rem)]">
         <div className="mb-8 text-center">
           <div className="text-4xl mb-4">🎉</div>
-          <h1 className="text-3xl font-bold tracking-tight">Job posted!</h1>
-          <p className="text-muted-foreground mt-2">Builders will start bidding within hours.</p>
+          <h1 className="text-3xl font-bold tracking-tight">Job live!</h1>
+          <p className="text-muted-foreground mt-2">Builders will bid shortly. Your payment is held safely — you control when it's released.</p>
+          <p className="text-sm text-muted-foreground mt-3">💬 Builders can message you via the chat bubble — check it to stay responsive</p>
         </div>
 
         <Card className="border-yellow-400 bg-yellow-50 dark:bg-yellow-950/20 mb-6">
@@ -187,7 +188,7 @@ export default function PostJob() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <Label htmlFor="budget">Budget ($)</Label>
+                <Label htmlFor="budget">Your budget (maximum $)</Label>
                 <Input
                   id="budget"
                   type="number"
@@ -197,7 +198,7 @@ export default function PostJob() {
                   onChange={(e) => setBudget(e.target.value)}
                   data-testid="input-post-budget"
                 />
-                <p className="text-xs text-muted-foreground">Minimum $10. Platform takes 15%.</p>
+                <p className="text-xs text-muted-foreground">Builders will bid at or below this amount</p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="deadline">Deadline</Label>
@@ -249,7 +250,7 @@ export default function PostJob() {
           </CardContent>
           <CardFooter className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t bg-muted/20 px-6 py-4">
             <p className="text-sm text-muted-foreground flex items-center gap-1.5">
-              <span className="text-green-600 font-bold">✓</span> Payment held safely in escrow
+              <span className="text-green-600 font-bold">✓</span> Your money is only released when you're happy with the work
             </p>
             <Button
               type="submit"
@@ -258,7 +259,7 @@ export default function PostJob() {
               disabled={createJobMutation.isPending}
               data-testid="btn-post-submit"
             >
-              {createJobMutation.isPending ? "Posting…" : "Post job & fund escrow"}
+              {createJobMutation.isPending ? "Posting…" : "Post job — funds protected until you approve"}
             </Button>
           </CardFooter>
         </form>

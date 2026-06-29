@@ -64,7 +64,7 @@ export default function Board() {
     mutation: {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: getListJobsQueryKey() });
-        toast({ title: "Bid submitted!", description: "The client will review your bid shortly." });
+        toast({ title: "Bid submitted!", description: "The client will review your bid shortly. 💬 Use the chat bubble in the bottom right to message the client directly" });
         setSelectedJob(null);
         setBidPrice("");
         setBidTime("");
@@ -150,7 +150,7 @@ export default function Board() {
                     </CardDescription>
                   </div>
                   <div className="text-right shrink-0 space-y-2">
-                    <div className="text-2xl font-bold text-green-600" data-testid={`text-budget-${job.id}`}>${job.budget}</div>
+                    <div className="text-2xl font-bold text-green-600" data-testid={`text-budget-${job.id}`}>Budget: ${job.budget}</div>
                     <div className="text-sm text-muted-foreground">{job.bids} bids</div>
                   </div>
                 </div>
@@ -217,7 +217,7 @@ export default function Board() {
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="bid-price">Your price ($)</Label>
+                      <Label htmlFor="bid-price">Your bid (USD)</Label>
                       <Input
                         id="bid-price"
                         type="number"
@@ -228,6 +228,7 @@ export default function Board() {
                         onChange={(e) => setBidPrice(e.target.value)}
                         data-testid="input-bid-price"
                       />
+                      <p className="text-xs text-muted-foreground">Bid at or below the client's budget to stay competitive</p>
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="bid-time">Delivery time</Label>

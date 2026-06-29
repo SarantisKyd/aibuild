@@ -1,0 +1,30 @@
+Make the following changes. Do not rewrite anything that isn't mentioned here.
+1. Escrow language
+
+Find every instance of "fund escrow", "Post job & fund escrow", and "Payment held safely in escrow" and replace with friendlier copy:
+
+Button: "Post job — funds protected until you approve"
+Footer note: "🔒 Your money is only released when you're happy with the work"
+Success screen headline: "Job live!" subtext: "Builders will bid shortly. Your payment is held safely — you control when it's released."
+
+2. Budget and bidding
+
+On the post a job form, change the Budget field label to "Your budget (maximum $)" and add helper text: "Builders will bid at or below this amount"
+On the bid modal, change the price input label to "Your bid (USD)" and add helper text: "Bid at or below the client's budget to stay competitive"
+On each job card on the board, change the green price to show "Budget: X"insteadofjust"X" instead of just "
+X"insteadofjust"X"
+
+3. Messaging via Tawk.to
+
+In the HTML head, add the Tawk.to live chat script: go to tawk.to, sign up free, create a property called AIBuild, copy the embed script they give you, and add it just before </body>
+When a builder submits a bid, show this message below the success confirmation: "💬 Use the chat bubble in the bottom right to message the client directly"
+When a job is posted successfully, show this message: "💬 Builders can message you via the chat bubble — check it to stay responsive"
+
+4. Tool marketplace
+
+Make sure the Tools page loads tools from GET /api/tools
+Add a working "List your tool" button that opens a modal with fields: emoji (text input), name, description, price (number), billing type (one-off or monthly), your email — submits to POST /api/tools
+Each tool card should have a Buy or Subscribe button that calls POST /api/tools/:id/buy and redirects to the returned checkoutUrl — same pattern as the job escrow flow
+If the tool has no price set, show "Try free" button instead
+
+Do not change server.js routes, the homepage, or any CSS variables. Only touch the frontend copy, labels, and the tools page logic.
