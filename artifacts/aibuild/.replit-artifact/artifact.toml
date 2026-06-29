@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "AIBuild"
+version = "1.0.0"
+id = "artifacts/aibuild"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 18396
+
+[services.development]
+run = "pnpm --filter @workspace/aibuild run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/aibuild", "run", "build" ]
+publicDir = "artifacts/aibuild/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "18396"
+BASE_PATH = "/"

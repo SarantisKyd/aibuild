@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AIBuild — AI Project Marketplace</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f8f7f4;
+    --surface: #ffffff;
+    --border: #e4e2db;
+    --text: #1a1917;
+    --muted: #6b6960;
+    --accent: #2563eb;
+    --accent-light: #eff6ff;
+    --success: #16a34a;
+    --success-light: #f0fdf4;
+    --warning: #d97706;
+    --warning-light: #fffbeb;
+    --danger: #dc2626;
+    --radius: 10px;
+    --font: 'Inter', system-ui, sans-serif;
+  }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  /* ── NAV ── */
+  nav {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .logo { font-size: 18px; font-weight: 700; letter-spacing: -0.5px; }
+  .logo span { color: var(--accent); }
+  .nav-links { display: flex; align-items: center; gap: 6px; }
+  .nav-links a {
+    text-decoration: none;
+    color: var(--muted);
+    font-size: 14px;
+    padding: 6px 12px;
+    border-radius: 7px;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+  }
+  .nav-links a:hover { background: var(--bg); color: var(--text); }
+  .nav-links a.active { color: var(--accent); font-weight: 500; }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: var(--radius);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    transition: opacity 0.15s, transform 0.1s;
+    text-decoration: none;
+  }
+  .btn:active { transform: scale(0.98); }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { opacity: 0.9; }
+  .btn-outline {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+  }
+  .btn-outline:hover { background: var(--bg); }
+  .btn-sm { padding: 6px 12px; font-size: 13px; }
+
+  /* ── PAGES ── */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* ── HERO ── */
+  .hero {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 72px 24px 48px;
+    text-align: center;
+  }
+  .hero-badge {
+    display: inline-block;
+    background: var(--accent-light);
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 20px;
+    margin-bottom: 20px;
+    letter-spacing: 0.03em;
+  }
+  .hero h1 {
+    font-size: clamp(28px, 5vw, 48px);
+    font-weight: 800;
+    letter-spacing: -1px;
+    line-height: 1.15;
+    margin-bottom: 18px;
+  }
+  .hero h1 em { color: var(--accent); font-style: normal; }
+  .hero p {
+    font-size: 18px;
+    color: var(--muted);
+    max-width: 560px;
+    margin: 0 auto 32px;
+  }
+  .hero-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .hero-stats {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    margin-top: 56px;
+    padding-top: 32px;
+    border-top: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+  .stat-item { text-align: center; }
+  .stat-item .num { font-size: 28px; font-weight: 800; letter-spacing: -1px; color: var(--text); }
+  .stat-item .label { font-size: 13px; color: var(--muted); margin-top: 2px; }
+
+  /* ── HOW IT WORKS ── */
+  .section { max-width: 900px; margin: 0 auto; padding: 48px 24px; }
+  .section-title {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    margin-bottom: 24px;
+  }
+  .steps-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+  .step-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+  }
+  .step-num {
+    width: 32px; height: 32px;
+    background: var(--accent-light);
+    color: var(--accent);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700;
+    margin-bottom: 12px;
+  }
+  .step-card h3 { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
+  .step-card p { font-size: 13px; color: var(--muted); }
+
+  /* ── JOB BOARD ── */
+  .board-header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 20px 24px;
+  }
+  .board-header-inner {
+    max-width: 900px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .board-header h2 { font-size: 18px; font-weight: 700; }
+  .filters { display: flex; gap: 8px; flex-wrap: wrap; }
+  .filter-chip {
+    padding: 5px 12px;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    font-size: 13px;
+    cursor: pointer;
+    background: var(--surface);
+    color: var(--muted);
+    transition: all 0.15s;
+  }
+  .filter-chip.active, .filter-chip:hover {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+  .jobs-list { max-width: 900px; margin: 0 auto; padding: 20px 24px; display: flex; flex-direction: column; gap: 12px; }
+  .job-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    cursor: pointer;
+    transition: border-color 0.15s, transform 0.1s;
+  }
+  .job-card:hover { border-color: var(--accent); transform: translateY(-1px); }
+  .job-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+  .job-title { font-size: 16px; font-weight: 600; }
+  .job-budget {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--success);
+    white-space: nowrap;
+  }
+  .job-desc { font-size: 14px; color: var(--muted); margin-bottom: 12px; line-height: 1.5; }
+  .job-meta { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    background: var(--bg);
+    color: var(--muted);
+    border: 1px solid var(--border);
+  }
+  .tag.urgent { background: #fef2f2; color: #dc2626; border-color: #fecaca; }
+  .tag.new { background: var(--accent-light); color: var(--accent); border-color: #bfdbfe; }
+  .bid-count { font-size: 13px; color: var(--muted); margin-left: auto; }
+
+  /* ── POST JOB FORM ── */
+  .form-wrap { max-width: 680px; margin: 0 auto; padding: 32px 24px; }
+  .form-wrap h2 { font-size: 22px; font-weight: 700; margin-bottom: 6px; letter-spacing: -0.5px; }
+  .form-wrap .sub { color: var(--muted); font-size: 14px; margin-bottom: 28px; }
+  .form-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px;
+  }
+  .field { margin-bottom: 20px; }
+  .field label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 7px;
+  }
+  .field label span { font-weight: 400; color: var(--muted); }
+  .field input, .field textarea, .field select {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: var(--font);
+    color: var(--text);
+    background: var(--bg);
+    transition: border-color 0.15s;
+    outline: none;
+  }
+  .field input:focus, .field textarea:focus, .field select:focus {
+    border-color: var(--accent);
+    background: var(--surface);
+  }
+  .field textarea { resize: vertical; min-height: 100px; }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .field-hint { font-size: 12px; color: var(--muted); margin-top: 5px; }
+  .skills-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+  .skill-btn {
+    padding: 5px 12px;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    font-size: 13px;
+    cursor: pointer;
+    background: var(--surface);
+    color: var(--muted);
+    transition: all 0.15s;
+  }
+  .skill-btn.selected { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .form-footer { margin-top: 24px; display: flex; justify-content: space-between; align-items: center; }
+  .escrow-note {
+    font-size: 13px;
+    color: var(--success);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* ── MARKETPLACE ── */
+  .tools-grid { max-width: 900px; margin: 0 auto; padding: 20px 24px; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+  .tool-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    cursor: pointer;
+    transition: border-color 0.15s, transform 0.1s;
+  }
+  .tool-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .tool-preview {
+    height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+    background: linear-gradient(135deg, var(--bg) 0%, #e8f0fe 100%);
+  }
+  .tool-body { padding: 16px; }
+  .tool-name { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+  .tool-desc { font-size: 13px; color: var(--muted); margin-bottom: 12px; line-height: 1.5; }
+  .tool-footer { display: flex; align-items: center; justify-content: space-between; }
+  .tool-price { font-size: 16px; font-weight: 700; color: var(--accent); }
+  .tool-meta { font-size: 12px; color: var(--muted); }
+  .stars { color: #f59e0b; font-size: 12px; }
+
+  /* ── MODAL / DETAIL ── */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface);
+    border-radius: 14px;
+    max-width: 600px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 28px;
+    position: relative;
+  }
+  .modal-close {
+    position: absolute;
+    top: 16px; right: 16px;
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: var(--bg);
+    border: none;
+    cursor: pointer;
+    font-size: 18px;
+    color: var(--muted);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .modal-close:hover { background: var(--border); }
+  .modal h3 { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+  .modal-meta { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+  .modal-desc { font-size: 14px; color: var(--muted); line-height: 1.6; margin-bottom: 20px; }
+  .bid-form { border-top: 1px solid var(--border); padding-top: 20px; }
+  .bid-form h4 { font-size: 15px; font-weight: 600; margin-bottom: 14px; }
+  .bid-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .bid-success {
+    display: none;
+    background: var(--success-light);
+    border: 1px solid #bbf7d0;
+    border-radius: 8px;
+    padding: 14px 16px;
+    font-size: 14px;
+    color: var(--success);
+    font-weight: 500;
+    text-align: center;
+    margin-top: 12px;
+  }
+  .bid-success.show { display: block; }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--text);
+    color: #fff;
+    padding: 12px 18px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    z-index: 500;
+    transform: translateY(80px);
+    opacity: 0;
+    transition: all 0.3s;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+
+  /* ── PROFILE SNIPPETS ── */
+  .avatar {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  @media (max-width: 600px) {
+    .field-row, .bid-row { grid-template-columns: 1fr; }
+    .hero-stats { gap: 24px; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">AI<span>Build</span></div>
+  <div class="nav-links">
+    <a onclick="showPage('home')" id="nav-home" class="active">Home</a>
+    <a onclick="showPage('board')" id="nav-board">Find jobs</a>
+    <a onclick="showPage('marketplace')" id="nav-marketplace">Tools</a>
+    <a onclick="showPage('post')" id="nav-post">Post a job</a>
+  </div>
+  <button class="btn btn-primary btn-sm" onclick="showPage('post')">Post a job</button>
+</nav>
+
+<!-- ── HOME ── -->
+<div id="page-home" class="page active">
+  <div class="hero">
+    <div class="hero-badge">Beta — Join the waitlist</div>
+    <h1>The marketplace for<br><em>AI-native projects</em></h1>
+    <p>Post a job with a deadline and budget. AI builders compete for it. The best tool wins. Fast, fair, and built for how AI work actually happens.</p>
+    <div class="hero-actions">
+      <button class="btn btn-primary" onclick="showPage('post')">Post your first job</button>
+      <button class="btn btn-outline" onclick="showPage('board')">Browse open jobs</button>
+    </div>
+    <div class="hero-stats">
+      <div class="stat-item"><div class="num">127</div><div class="label">Open jobs</div></div>
+      <div class="stat-item"><div class="num">$48k</div><div class="label">Paid out this month</div></div>
+      <div class="stat-item"><div class="num">340</div><div class="label">AI builders</div></div>
+      <div class="stat-item"><div class="num">4.8h</div><div class="label">Avg. first bid</div></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">How it works</div>
+    <div class="steps-grid">
+      <div class="step-card">
+        <div class="step-num">1</div>
+        <h3>Post your job</h3>
+        <p>Describe what you need, set a budget and deadline. Takes 2 minutes.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">2</div>
+        <h3>Builders bid</h3>
+        <p>AI-capable builders see your job immediately and submit bids with portfolios.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">3</div>
+        <h3>Pick the best fit</h3>
+        <p>Compare bids, profiles, and past work. Hire with one click.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">4</div>
+        <h3>Work delivered</h3>
+        <p>Payment is held in escrow. Released only when you approve the work.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── JOB BOARD ── -->
+<div id="page-board" class="page">
+  <div class="board-header">
+    <div class="board-header-inner">
+      <h2>Open jobs <span style="color:var(--muted);font-weight:400;font-size:15px">127 available</span></h2>
+      <div class="filters">
+        <span class="filter-chip active" onclick="filterJobs(this,'all')">All</span>
+        <span class="filter-chip" onclick="filterJobs(this,'web')">Web / App</span>
+        <span class="filter-chip" onclick="filterJobs(this,'automation')">Automation</span>
+        <span class="filter-chip" onclick="filterJobs(this,'agent')">AI Agent</span>
+        <span class="filter-chip" onclick="filterJobs(this,'data')">Data</span>
+      </div>
+    </div>
+  </div>
+  <div class="jobs-list" id="jobs-list"></div>
+</div>
+
+<!-- ── POST JOB ── -->
+<div id="page-post" class="page">
+  <div class="form-wrap">
+    <h2>Post a job</h2>
+    <p class="sub">Describe what you need. AI builders will bid within hours.</p>
+    <div class="form-card">
+      <div class="field">
+        <label>Job title <span>— be specific</span></label>
+        <input type="text" placeholder="e.g. Build a Stripe-connected chatbot for my Shopify store" id="job-title">
+      </div>
+      <div class="field">
+        <label>Description <span>— what problem does this solve?</span></label>
+        <textarea placeholder="Describe the task, what output you expect, any technical constraints..." id="job-desc"></textarea>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Budget (USD)</label>
+          <input type="number" placeholder="150" id="job-budget" min="10">
+          <div class="field-hint">Minimum $10. Platform takes 15%.</div>
+        </div>
+        <div class="field">
+          <label>Deadline</label>
+          <select id="job-deadline">
+            <option>24 hours</option>
+            <option>3 days</option>
+            <option selected>1 week</option>
+            <option>2 weeks</option>
+            <option>No rush</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label>Skills needed <span>— select all that apply</span></label>
+        <div class="skills-row" id="skills-row">
+          <span class="skill-btn" onclick="toggleSkill(this)">Python</span>
+          <span class="skill-btn" onclick="toggleSkill(this)">JavaScript</span>
+          <span class="skill-btn" onclick="toggleSkill(this)">Claude API</span>
+          <span class="skill-btn" onclick="toggleSkill(this)">OpenAI API</span>
+          <span class="skill-btn" onclick="toggleSkill(this)">Replit</span>
+          <span class="skill-btn" onclick="toggleSkill(this)">Stripe</span>
+          <span class="skill-btn" onclick="toggleSkill(this)">Web scraping</span>
+          <span class="skill-btn" onclick="toggleSkill(this)">Automation</span>
+          <span class="skill-btn" onclick="toggleSkill(this)">Chatbot</span>
+          <span class="skill-btn" onclick="toggleSkill(this)">Data analysis</span>
+          <span class="skill-btn" onclick="toggleSkill(this)">No-code</span>
+        </div>
+      </div>
+      <div class="form-footer">
+        <span class="escrow-note">&#10003; Payment held safely in escrow</span>
+        <button class="btn btn-primary" onclick="submitJob()">Post job &amp; fund escrow</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── MARKETPLACE ── -->
+<div id="page-marketplace" class="page">
+  <div class="board-header">
+    <div class="board-header-inner">
+      <h2>Tool marketplace <span style="color:var(--muted);font-weight:400;font-size:15px">89 tools</span></h2>
+      <div class="filters">
+        <span class="filter-chip active">All</span>
+        <span class="filter-chip">Chatbots</span>
+        <span class="filter-chip">Automation</span>
+        <span class="filter-chip">Data</span>
+        <span class="filter-chip">Content</span>
+        <span class="filter-chip">Scraping</span>
+      </div>
+    </div>
+  </div>
+  <div class="tools-grid" id="tools-grid"></div>
+</div>
+
+<!-- ── JOB DETAIL MODAL ── -->
+<div class="modal-overlay" id="job-modal" onclick="closeModal(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="document.getElementById('job-modal').classList.remove('open')">×</button>
+    <div id="modal-content"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const JOBS = [
+  { id:1, title:"Build a lead qualification chatbot for my real estate agency", budget:280, deadline:"3 days", bids:7, cat:"agent", urgent:true, isNew:false, desc:"I need a chatbot that asks leads a series of qualification questions (budget, timeline, location preference) and scores them 1–10. Should integrate with my CRM via webhook. Built with Claude API preferred.", skills:["Claude API","JavaScript","Chatbot"] },
+  { id:2, title:"Scrape 500 B2B company emails from LinkedIn + enrich with AI", budget:120, deadline:"24 hours", bids:12, cat:"data", urgent:true, isNew:false, desc:"Need a Python script that scrapes company data from LinkedIn Sales Navigator (I'll provide my credentials/cookies) and uses AI to guess and verify the decision-maker emails. Output as CSV.", skills:["Python","Web scraping","Data analysis"] },
+  { id:3, title:"AI-powered invoice parser — PDF to structured JSON", budget:350, deadline:"1 week", bids:4, cat:"automation", urgent:false, isNew:true, desc:"I receive hundreds of invoices as PDFs monthly. Need a tool that extracts vendor name, date, line items, totals, and tax into clean JSON. Must handle varied PDF layouts. API or web UI preferred.", skills:["Python","Claude API","Automation"] },
+  { id:4, title:"Replit app: auto-post Twitter/X threads from a Google Sheet", budget:90, deadline:"3 days", bids:9, cat:"automation", urgent:false, isNew:true, desc:"Simple tool: reads rows from a Google Sheet (each row = one thread), schedules and posts to Twitter/X via API at times I specify. Should handle images in a separate column.", skills:["Replit","JavaScript","Automation"] },
+  { id:5, title:"Build a landing page with AI-generated copy for my SaaS", budget:200, deadline:"1 week", bids:6, cat:"web", urgent:false, isNew:false, desc:"Need a clean, converting landing page. The AI should auto-generate headline variations and body copy based on my product description. Built in HTML/CSS or React, deployed on Vercel.", skills:["JavaScript","Claude API","No-code"] },
+  { id:6, title:"Customer support AI agent — integrates with Intercom", budget:500, deadline:"2 weeks", bids:3, cat:"agent", urgent:false, isNew:true, desc:"Build an AI agent that handles tier-1 support tickets in Intercom. Should answer FAQs, escalate complex issues to humans, and log resolutions. Must be trained on our help docs.", skills:["Claude API","Python","Chatbot","Automation"] },
+  { id:7, title:"Python script: monitor Amazon prices and alert me via Telegram", budget:75, deadline:"24 hours", bids:15, cat:"automation", urgent:true, isNew:false, desc:"Simple price tracker. Give it a list of Amazon product URLs, check prices every hour, send me a Telegram message when price drops below a threshold I set per product.", skills:["Python","Automation"] },
+  { id:8, title:"AI dashboard that summarises my weekly Notion notes", budget:160, deadline:"1 week", bids:5, cat:"data", urgent:false, isNew:true, desc:"Pull notes from my Notion workspace via API, summarise them weekly using Claude, and display in a clean read-only dashboard (web app). Should highlight action items and decisions.", skills:["Claude API","Python","Replit"] },
+];
+
+const TOOLS = [
+  { name:"ColdMailGPT", emoji:"✉️", desc:"Generates personalised cold email sequences from a LinkedIn URL. Output: 5-email drip, subject lines, follow-ups.", price:"$29/mo", rating:"4.8", reviews:34, bg:"#e8f4fd" },
+  { name:"InvoiceAI", emoji:"📄", desc:"Drag-drop PDF invoices → structured JSON or CSV. Handles 50+ layouts. Webhook output supported.", price:"$19/mo", rating:"4.9", reviews:61, bg:"#f0fdf4" },
+  { name:"LeadScorer", emoji:"🎯", desc:"Embed on any site. Asks 6 questions, scores leads 1–10, sends scored leads to your CRM via webhook.", price:"$49/mo", rating:"4.7", reviews:22, bg:"#fdf4ff" },
+  { name:"SheetBot", emoji:"📊", desc:"Connect to Google Sheets, ask questions in plain English. Generates charts and summaries instantly.", price:"$15/mo", rating:"4.6", reviews:45, bg:"#fffbeb" },
+  { name:"SupportGenie", emoji:"🤖", desc:"Paste your help docs, get an embeddable support widget. Answers Tier 1 questions, escalates the rest.", price:"$39/mo", rating:"4.8", reviews:18, bg:"#fef2f2" },
+  { name:"SEO Autopilot", emoji:"🔍", desc:"Give it a keyword, get a full SEO-optimised blog post with internal link suggestions and meta tags.", price:"$25/mo", rating:"4.5", reviews:77, bg:"#f0fdf4" },
+];
+
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  document.getElementById('nav-'+id).classList.add('active');
+  if (id === 'board') renderJobs(JOBS);
+  if (id === 'marketplace') renderTools();
+  window.scrollTo(0, 0);
+}
+
+function renderJobs(jobs) {
+  const list = document.getElementById('jobs-list');
+  list.innerHTML = jobs.map(j => `
+    <div class="job-card" onclick="openJob(${j.id})">
+      <div class="job-top">
+        <div class="job-title">${j.title}</div>
+        <div class="job-budget">$${j.budget}</div>
+      </div>
+      <div class="job-desc">${j.desc.substring(0,120)}…</div>
+      <div class="job-meta">
+        ${j.urgent ? '<span class="tag urgent">⚡ Urgent</span>' : ''}
+        ${j.isNew ? '<span class="tag new">✦ New</span>' : ''}
+        <span class="tag">🕐 ${j.deadline}</span>
+        ${j.skills.slice(0,3).map(s => `<span class="tag">${s}</span>`).join('')}
+        <span class="bid-count">${j.bids} bids</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+function filterJobs(el, cat) {
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  const filtered = cat === 'all' ? JOBS : JOBS.filter(j => j.cat === cat);
+  renderJobs(filtered);
+}
+
+function openJob(id) {
+  const j = JOBS.find(x => x.id === id);
+  document.getElementById('modal-content').innerHTML = `
+    <h3>${j.title}</h3>
+    <div class="modal-meta">
+      <span class="tag" style="font-size:15px;padding:4px 12px;color:var(--success);background:var(--success-light);border-color:#bbf7d0;">$${j.budget}</span>
+      <span class="tag">🕐 ${j.deadline}</span>
+      ${j.bids} bids so far
+    </div>
+    <div class="modal-desc">${j.desc}</div>
+    <div style="margin-bottom:16px;">${j.skills.map(s => `<span class="tag" style="margin-right:6px">${s}</span>`).join('')}</div>
+    <div class="bid-form">
+      <h4>Submit your bid</h4>
+      <div class="bid-row">
+        <div class="field">
+          <label>Your price (USD)</label>
+          <input type="number" placeholder="${j.budget}" id="bid-amount">
+        </div>
+        <div class="field">
+          <label>Delivery time</label>
+          <select><option>${j.deadline}</option><option>Faster</option><option>I need more time</option></select>
+        </div>
+      </div>
+      <div class="field">
+        <label>Cover note <span>— what's your approach?</span></label>
+        <textarea placeholder="Briefly describe how you'd build this, your relevant experience, and any questions..." style="min-height:80px"></textarea>
+      </div>
+      <button class="btn btn-primary" style="width:100%" onclick="submitBid()">Submit bid</button>
+      <div class="bid-success" id="bid-success">✓ Bid submitted! The client will review and get back to you within 24 hours.</div>
+    </div>
+  `;
+  document.getElementById('job-modal').classList.add('open');
+}
+
+function submitBid() {
+  document.getElementById('bid-success').classList.add('show');
+  setTimeout(() => document.getElementById('job-modal').classList.remove('open'), 2000);
+}
+
+function closeModal(e) {
+  if (e.target === document.getElementById('job-modal')) {
+    document.getElementById('job-modal').classList.remove('open');
+  }
+}
+
+function renderTools() {
+  document.getElementById('tools-grid').innerHTML = TOOLS.map(t => `
+    <div class="tool-card">
+      <div class="tool-preview" style="background:${t.bg}">${t.emoji}</div>
+      <div class="tool-body">
+        <div class="tool-name">${t.name}</div>
+        <div class="tool-desc">${t.desc}</div>
+        <div class="tool-footer">
+          <div class="tool-price">${t.price}</div>
+          <div class="tool-meta">
+            <span class="stars">★★★★★</span> ${t.rating} (${t.reviews})
+          </div>
+        </div>
+        <button class="btn btn-outline btn-sm" style="width:100%;margin-top:12px" onclick="toast('Opening ${t.name}…')">Try free for 7 days</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggleSkill(el) { el.classList.toggle('selected'); }
+
+function submitJob() {
+  const title = document.getElementById('job-title').value.trim();
+  const budget = document.getElementById('job-budget').value;
+  if (!title) { toast('Add a job title first'); return; }
+  if (!budget) { toast('Add a budget'); return; }
+  toast('✓ Job posted! Builders will bid within hours.');
+  setTimeout(() => showPage('board'), 1500);
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+renderJobs(JOBS);
+</script>
+</body>
+</html>
