@@ -1,10 +1,8 @@
 import { useState, useEffect } from "react";
-import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 
 export default function BuilderPage() {
@@ -13,9 +11,6 @@ export default function BuilderPage() {
   const [email, setEmail] = useState("");
   const [bio, setBio] = useState("");
   const [pending, setPending] = useState(false);
-  const [verifyOpen, setVerifyOpen] = useState(false);
-  const [verifyEmail, setVerifyEmail] = useState("");
-  const [verifyPending, setVerifyPending] = useState(false);
 
   const justSubscribed =
     typeof window !== "undefined" &&
@@ -55,33 +50,6 @@ export default function BuilderPage() {
       toast({ title: "Error", description: "Something went wrong.", variant: "destructive" });
     } finally {
       setPending(false);
-    }
-  };
-
-  const handleVerify = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!verifyEmail.trim()) return;
-    setVerifyPending(true);
-    try {
-      const res = await fetch("/api/builders/subscribe", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: verifyEmail.trim().toLowerCase() }),
-      });
-      const data = await res.json();
-      if (data.checkoutUrl) {
-        window.location.href = data.checkoutUrl;
-      } else {
-        toast({
-          title: "Error",
-          description: data.error ?? "Could not start checkout.",
-          variant: "destructive",
-        });
-      }
-    } catch {
-      toast({ title: "Error", description: "Something went wrong.", variant: "destructive" });
-    } finally {
-      setVerifyPending(false);
     }
   };
 
@@ -150,79 +118,6 @@ export default function BuilderPage() {
         </div>
       </form>
 
-      {/* Divider + optional upgrade */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-3">
-          <div className="flex-1 h-px bg-border" />
-          <span className="text-xs font-semibold text-muted-foreground tracking-widest uppercase">
-            Optional — after you're set up
-          </span>
-          <div className="flex-1 h-px bg-border" />
-        </div>
-
-        <Card className="border-blue-200 bg-blue-50/50 dark:bg-blue-950/20 dark:border-blue-900">
-          <CardContent className="pt-5 space-y-3">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-base">⚡</span>
-              <span className="font-semibold">Go Verified for $9/month</span>
-              <Badge className="bg-blue-600 hover:bg-blue-700 text-white text-xs">
-                ✓ Verified
-              </Badge>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              Get a blue checkmark, priority placement, and 2hr early access to new jobs.
-            </p>
-
-            <button
-              type="button"
-              onClick={() => setVerifyOpen((o) => !o)}
-              className="text-sm text-primary underline underline-offset-2 hover:no-underline"
-            >
-              {verifyOpen ? "Hide details" : "Learn more"}
-            </button>
-
-            {verifyOpen && (
-              <div className="space-y-4 pt-1">
-                <ul className="space-y-1.5 text-sm">
-                  <li className="flex items-start gap-2">
-                    <span className="text-blue-600 font-bold mt-0.5">✓</span>
-                    <span><strong>Priority placement</strong> in search results</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-blue-600 font-bold mt-0.5">✓</span>
-                    <span><strong>Verified checkmark</strong> on your profile</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-blue-600 font-bold mt-0.5">✓</span>
-                    <span><strong>Early access</strong> to new jobs — 2 hours before public</span>
-                  </li>
-                </ul>
-
-                <form onSubmit={handleVerify} className="space-y-2">
-                  <Input
-                    type="email"
-                    placeholder="your@email.com (must match your account)"
-                    value={verifyEmail}
-                    onChange={(e) => setVerifyEmail(e.target.value)}
-                    required
-                  />
-                  <Button
-                    type="submit"
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-                    disabled={verifyPending || !verifyEmail.trim()}
-                    data-testid="btn-builder-subscribe"
-                  >
-                    {verifyPending ? "Loading…" : "Subscribe $9/mo"}
-                  </Button>
-                  <p className="text-xs text-muted-foreground text-center">
-                    Cancel anytime. Redirects to Stripe for secure payment.
-                  </p>
-                </form>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
     </div>
   );
 }
