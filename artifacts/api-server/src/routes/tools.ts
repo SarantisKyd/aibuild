@@ -23,6 +23,20 @@ router.get("/tools", async (_req, res) => {
   res.json(tools);
 });
 
+router.get("/tools/:id", async (req, res) => {
+  const id = Number(req.params.id);
+  if (isNaN(id)) {
+    res.status(400).json({ error: "Invalid tool id" });
+    return;
+  }
+  const [tool] = await db.select().from(toolsTable).where(eq(toolsTable.id, id));
+  if (!tool) {
+    res.status(404).json({ error: "Tool not found" });
+    return;
+  }
+  res.json(tool);
+});
+
 router.post("/tools", async (req, res) => {
   const parsed = CreateToolBody.safeParse(req.body);
   if (!parsed.success) {
@@ -105,7 +119,7 @@ router.post("/tools/:id/buy", async (req, res) => {
         },
       ],
       metadata: { type: "tool_purchase", toolId: String(tool.id) },
-      success_url: `${origin}/tools?purchased=true`,
+      success_url: `${origin}/tool-access?id=${tool.id}`,
       cancel_url: `${origin}/tools`,
     };
 
