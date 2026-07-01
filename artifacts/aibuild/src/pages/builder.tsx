@@ -74,8 +74,8 @@ export default function BuilderPage() {
   return (
     <div className="max-w-2xl mx-auto px-4 py-12 min-h-[calc(100vh-4rem)] space-y-8">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Builder profile</h1>
-        <p className="text-muted-foreground mt-2">Look up your profile or get verified to stand out.</p>
+        <h1 className="text-3xl font-bold tracking-tight">Start building — it's free</h1>
+        <p className="text-muted-foreground mt-2">Sign up, connect your Stripe account to receive payments, and start bidding on jobs. No subscription needed.</p>
       </div>
 
       {/* Profile lookup */}
@@ -125,6 +125,7 @@ export default function BuilderPage() {
       </Card>
 
       {/* Subscription upsell */}
+      <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Optional upgrade</p>
       <Card className="border-blue-200 bg-blue-50/50 dark:bg-blue-950/20 dark:border-blue-900">
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
@@ -168,10 +169,10 @@ export default function BuilderPage() {
                 disabled={subscribePending || !email.trim()}
                 data-testid="btn-builder-subscribe"
               >
-                {subscribePending ? "Loading…" : "Subscribe $9/mo"}
+                {subscribePending ? "Loading…" : "Connect Stripe & start bidding for free"}
               </Button>
               <p className="text-xs text-muted-foreground text-center">
-                Cancel anytime. You'll be redirected to Stripe for secure payment.
+                Connecting Stripe lets us pay you directly when clients approve your work. We never charge you to bid.
               </p>
             </div>
           )}
