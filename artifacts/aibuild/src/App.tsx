@@ -21,7 +21,7 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/board" component={Board} />
       <Route path="/post" component={PostJob} />
-      <Route path="/tools" component={Tools} />
+      <Route path="/tools">{() => { window.location.replace("/"); return null; }}</Route>
       <Route path="/builder" component={Builder} />
       <Route path="/tool-access" component={ToolAccess} />
       <Route path="/admin" component={Admin} />
