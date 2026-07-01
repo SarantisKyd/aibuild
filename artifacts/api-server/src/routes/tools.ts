@@ -19,7 +19,11 @@ function pickColor(name: string): string {
 }
 
 router.get("/tools", async (_req, res) => {
-  const tools = await db.select().from(toolsTable).orderBy(toolsTable.id);
+  const tools = await db
+    .select()
+    .from(toolsTable)
+    .where(eq(toolsTable.status, "approved"))
+    .orderBy(toolsTable.id);
   res.json(tools);
 });
 
@@ -43,7 +47,7 @@ router.post("/tools", async (req, res) => {
     res.status(400).json({ error: "Validation error", details: parsed.error.issues });
     return;
   }
-  const { name, description, price, billingType, builderEmail, emoji } = parsed.data;
+  const { name, description, price, billingType, builderEmail, emoji, toolUrl, accessInstructions, targetAudience } = parsed.data;
 
   const priceDisplay = billingType === "monthly"
     ? `$${(price / 100).toFixed(2)}/mo`
@@ -59,9 +63,13 @@ router.post("/tools", async (req, res) => {
       priceAmount: price,
       billingType,
       builderEmail,
+      toolUrl: toolUrl ?? null,
+      accessInstructions: accessInstructions ?? null,
+      targetAudience: targetAudience ?? null,
       bgColor: pickColor(name),
       category: "all",
       sales: 0,
+      status: "pending",
       rating: "5.0",
       reviews: 0,
     })

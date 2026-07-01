@@ -5,7 +5,7 @@ import router from "./routes";
 import { logger } from "./lib/logger";
 import { WebhookHandlers } from "./webhookHandlers";
 import { db } from "@workspace/db";
-import { jobsTable, buildersTable, toolsTable } from "@workspace/db";
+import { jobsTable, buildersTable, toolsTable, purchasesTable } from "@workspace/db";
 import { eq, sql } from "drizzle-orm";
 
 const app: Express = express();
@@ -59,12 +59,28 @@ app.post(
 
         if (session.metadata?.type === "tool_purchase") {
           const toolId = Number(session.metadata.toolId);
+          const sessionObj = event.data.object as {
+            id?: string;
+            customer_details?: { email?: string };
+            metadata?: { toolId?: string };
+          };
+          const sessionId = sessionObj.id ?? "";
+          const buyerEmail = sessionObj.customer_details?.email ?? null;
           if (!isNaN(toolId)) {
             await db
               .update(toolsTable)
               .set({ sales: sql`${toolsTable.sales} + 1` })
               .where(eq(toolsTable.id, toolId));
-            logger.info({ toolId }, "Tool sale recorded");
+            // Record purchase with 48-hour dispute window
+            // Payout to builder triggered manually or after dispute window — to be built next
+            await db.insert(purchasesTable).values({
+              toolId,
+              buyerEmail,
+              sessionId,
+              disputeWindowEnds: Date.now() + 48 * 60 * 60 * 1000,
+              status: "pending_payout",
+            }).onConflictDoNothing();
+            logger.info({ toolId, sessionId }, "Tool purchase recorded with dispute window");
           }
         }
 

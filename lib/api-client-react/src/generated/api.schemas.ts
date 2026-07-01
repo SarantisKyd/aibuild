@@ -89,6 +89,11 @@ export interface Tool {
   billingType?: string | null;
   builderEmail?: string | null;
   sales: number;
+  status: string;
+  toolUrl?: string | null;
+  accessInstructions?: string | null;
+  targetAudience?: string | null;
+  rejectionReason?: string | null;
   createdAt: string;
 }
 
@@ -108,6 +113,9 @@ export interface CreateToolBody {
   billingType: CreateToolBodyBillingType;
   builderEmail: string;
   emoji: string;
+  toolUrl?: string;
+  accessInstructions: string;
+  targetAudience: string;
 }
 
 export interface ToolBuyResponse {

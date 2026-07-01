@@ -490,6 +490,20 @@ components:
           nullable: true
         sales:
           type: integer
+        status:
+          type: string
+        toolUrl:
+          type: string
+          nullable: true
+        accessInstructions:
+          type: string
+          nullable: true
+        targetAudience:
+          type: string
+          nullable: true
+        rejectionReason:
+          type: string
+          nullable: true
         createdAt:
           type: string
           format: date-time
@@ -504,6 +518,7 @@ components:
         - bgColor
         - category
         - sales
+        - status
         - createdAt
 
     CreateToolBody:
@@ -524,6 +539,12 @@ components:
           format: email
         emoji:
           type: string
+        toolUrl:
+          type: string
+        accessInstructions:
+          type: string
+        targetAudience:
+          type: string
       required:
         - name
         - description
@@ -531,6 +552,8 @@ components:
         - billingType
         - builderEmail
         - emoji
+        - accessInstructions
+        - targetAudience
 
     ToolBuyResponse:
       type: object

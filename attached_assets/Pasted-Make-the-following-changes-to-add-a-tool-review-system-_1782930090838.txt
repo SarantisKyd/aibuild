@@ -1,0 +1,39 @@
+Make the following changes to add a tool review system. Do not touch the job board, escrow flow, or any existing styles.
+1. Tool status
+In server.js, update POST /api/tools to set status: 'pending' on every new tool by default. Update GET /api/tools to only return tools where status === 'approved' to the public marketplace. Pending and rejected tools are hidden from buyers.
+2. Update the listing form
+In the "List your tool" modal in the frontend, add these two fields below the tool URL field:
+
+"How to use it" — textarea, placeholder "Step by step instructions for the buyer after purchase. Be specific.", required
+"Who is it for" — text input, placeholder "e.g. Real estate agents, Shopify store owners, freelancers", required
+Store both as accessInstructions and targetAudience in the database.
+After submitting show this message instead of immediately showing the tool: "✅ Tool submitted for review. We'll review it within 24 hours and notify you by email."
+
+3. Admin review page
+Add a new page at /admin in the frontend. Protect it with a simple password prompt on load — hardcode the password as aibuild2024 for now. If wrong password, show "Access denied." If correct, show a dashboard with two tabs: Pending and Approved.
+Each tool in the list shows:
+
+Tool name, emoji, description, target audience
+Tool URL as a clickable link that opens in a new tab so you can test it
+Access instructions text
+Builder email
+Price and billing type
+An Approve button and a Reject button
+
+4. Approve/Reject routes
+In server.js add:
+
+POST /api/admin/tools/:id/approve — sets tool.status to 'approved', requires header x-admin-password: aibuild2024
+POST /api/admin/tools/:id/reject — sets tool.status to 'rejected', requires same header. Body: { reason } — store the rejection reason on the tool
+
+The admin page sends the password header with every approve/reject request.
+5. Dispute window
+In server.js, when a tool purchase webhook fires (checkout.session.completed with type tool_purchase):
+
+Record the purchase with { toolId, buyerEmail, purchasedAt, status: 'pending_payout', disputeWindowEnds: Date.now() + 48*60*60*1000 }
+Store under key purchase:{sessionId} in the Replit database
+Do NOT transfer money to the builder immediately
+Add a note in the code: "Payout to builder triggered manually or after dispute window — to be built next"
+
+Add a Disputes tab to the admin page showing all purchases with their dispute window countdown and a "Release payout" button per purchase (the release logic can be a placeholder for now that just logs "payout released").
+Do not change anything else.

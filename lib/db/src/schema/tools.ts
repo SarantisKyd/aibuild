@@ -16,6 +16,11 @@ export const toolsTable = pgTable("tools", {
   billingType: text("billing_type"),
   builderEmail: text("builder_email"),
   sales: integer("sales").notNull().default(0),
+  status: text("status").notNull().default("pending"),
+  toolUrl: text("tool_url"),
+  accessInstructions: text("access_instructions"),
+  targetAudience: text("target_audience"),
+  rejectionReason: text("rejection_reason"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

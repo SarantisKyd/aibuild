@@ -208,6 +208,11 @@ export const ListToolsResponseItem = zod.object({
   "billingType": zod.string().nullish(),
   "builderEmail": zod.string().nullish(),
   "sales": zod.number(),
+  "status": zod.string(),
+  "toolUrl": zod.string().nullish(),
+  "accessInstructions": zod.string().nullish(),
+  "targetAudience": zod.string().nullish(),
+  "rejectionReason": zod.string().nullish(),
   "createdAt": zod.coerce.date()
 })
 export const ListToolsResponse = zod.array(ListToolsResponseItem)
@@ -222,7 +227,10 @@ export const CreateToolBody = zod.object({
   "price": zod.number().describe('Price in cents (e.g. 999 = $9.99)'),
   "billingType": zod.enum(['one_off', 'monthly']),
   "builderEmail": zod.string().email(),
-  "emoji": zod.string()
+  "emoji": zod.string(),
+  "toolUrl": zod.string().optional(),
+  "accessInstructions": zod.string(),
+  "targetAudience": zod.string()
 })
 
 export const CreateToolResponse = zod.object({
@@ -239,6 +247,11 @@ export const CreateToolResponse = zod.object({
   "billingType": zod.string().nullish(),
   "builderEmail": zod.string().nullish(),
   "sales": zod.number(),
+  "status": zod.string(),
+  "toolUrl": zod.string().nullish(),
+  "accessInstructions": zod.string().nullish(),
+  "targetAudience": zod.string().nullish(),
+  "rejectionReason": zod.string().nullish(),
   "createdAt": zod.coerce.date()
 })
 
