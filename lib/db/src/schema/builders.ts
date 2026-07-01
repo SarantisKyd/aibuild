@@ -6,6 +6,7 @@ export const buildersTable = pgTable("builders", {
   id: serial("id").primaryKey(),
   email: text("email").notNull().unique(),
   name: text("name").notNull().default(""),
+  bio: text("bio"),
   verified: boolean("verified").notNull().default(false),
   stripeCustomerId: text("stripe_customer_id"),
   stripeSubscriptionId: text("stripe_subscription_id"),

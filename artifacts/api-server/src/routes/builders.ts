@@ -6,6 +6,62 @@ import { getUncachableStripeClient } from "../stripeClient";
 
 const router: IRouter = Router();
 
+router.post("/builders", async (req, res) => {
+  const { name, email, bio } = req.body as { name?: string; email?: string; bio?: string };
+  if (!email || !name) {
+    res.status(400).json({ error: "name and email are required" });
+    return;
+  }
+
+  const normalizedEmail = email.toLowerCase();
+
+  const existing = await db
+    .select()
+    .from(buildersTable)
+    .where(eq(buildersTable.email, normalizedEmail));
+
+  let stripeAccountId: string | null = existing[0]?.stripeAccountId ?? null;
+
+  if (existing.length === 0) {
+    const [inserted] = await db
+      .insert(buildersTable)
+      .values({ email: normalizedEmail, name: name.trim(), bio: bio?.trim() ?? null, verified: false })
+      .returning();
+    stripeAccountId = inserted.stripeAccountId ?? null;
+  } else if (bio?.trim()) {
+    await db
+      .update(buildersTable)
+      .set({ name: name.trim(), bio: bio.trim() })
+      .where(eq(buildersTable.email, normalizedEmail));
+  }
+
+  try {
+    const stripe = await getUncachableStripeClient();
+    const appUrl = `https://${process.env.REPLIT_DOMAINS?.split(",")[0]}`;
+
+    if (!stripeAccountId) {
+      const account = await stripe.accounts.create({ type: "express", email: normalizedEmail });
+      stripeAccountId = account.id;
+      await db
+        .update(buildersTable)
+        .set({ stripeAccountId })
+        .where(eq(buildersTable.email, normalizedEmail));
+    }
+
+    const accountLink = await stripe.accountLinks.create({
+      account: stripeAccountId,
+      refresh_url: `${appUrl}/builder`,
+      return_url: `${appUrl}/builder?connected=true`,
+      type: "account_onboarding",
+    });
+
+    res.json({ onboardingUrl: accountLink.url });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    res.status(500).json({ error: msg });
+  }
+});
+
 router.get("/builders/:email", async (req, res) => {
   const { email } = req.params;
   const [builder] = await db
