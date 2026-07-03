@@ -102,7 +102,8 @@ router.get("/jobs/:id", async (req, res) => {
     res.status(404).json({ error: "Job not found" });
     return;
   }
-  res.json(job);
+  const jobBids = await db.select().from(bidsTable).where(eq(bidsTable.jobId, id));
+  res.json({ ...job, bidsList: jobBids });
 });
 
 router.get("/jobs/:id/bids", async (req, res) => {
@@ -350,21 +351,36 @@ router.post("/jobs/:id/cancel", async (req, res) => {
     return;
   }
 
-  if (job.stripeSessionId) {
-    try {
-      const stripe = await getUncachableStripeClient();
-      const session = await stripe.checkout.sessions.retrieve(job.stripeSessionId);
-      if (session.payment_status === "paid" && session.payment_intent) {
-        const paymentIntentId =
-          typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent.id;
-        await stripe.refunds.create({ payment_intent: paymentIntentId });
-      }
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      logger.error({ jobId, err: msg }, "Stripe refund failed");
-      res.status(500).json({ error: msg });
-      return;
+  if (!job.stripeSessionId) {
+    await db
+      .update(jobsTable)
+      .set({ status: "cancelled", cancelledAt: new Date() })
+      .where(eq(jobsTable.id, jobId));
+
+    logger.info({ jobId }, "Job cancelled — no payment was made, no refund needed");
+    res.json({
+      success: true,
+      refunded: false,
+      message: "Job cancelled. No payment was made so no refund is needed.",
+    });
+    return;
+  }
+
+  let refunded = false;
+  try {
+    const stripe = await getUncachableStripeClient();
+    const session = await stripe.checkout.sessions.retrieve(job.stripeSessionId);
+    if (session.payment_status === "paid" && session.payment_intent) {
+      const paymentIntentId =
+        typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent.id;
+      await stripe.refunds.create({ payment_intent: paymentIntentId });
+      refunded = true;
     }
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    logger.error({ jobId, err: msg }, "Stripe refund failed");
+    res.status(500).json({ error: msg });
+    return;
   }
 
   await db
@@ -372,8 +388,17 @@ router.post("/jobs/:id/cancel", async (req, res) => {
     .set({ status: "cancelled", cancelledAt: new Date() })
     .where(eq(jobsTable.id, jobId));
 
-  logger.info({ jobId }, "Job cancelled and refunded");
-  res.json({ success: true, refundAmount: job.budget });
+  if (refunded) {
+    logger.info({ jobId }, "Job cancelled and refunded");
+    res.json({ success: true, refunded: true, refundAmount: job.budget });
+  } else {
+    logger.info({ jobId }, "Job cancelled — checkout session was never paid, no refund needed");
+    res.json({
+      success: true,
+      refunded: false,
+      message: "Job cancelled. No payment was made so no refund is needed.",
+    });
+  }
 });
 
 router.post("/jobs/:id/feature", async (req, res) => {

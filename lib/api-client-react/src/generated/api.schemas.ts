@@ -17,6 +17,17 @@ export interface AcceptedBid {
   builderEmail: string;
 }
 
+export interface Bid {
+  id: number;
+  jobId: number;
+  price: number;
+  deliveryTime: string;
+  coverNote: string;
+  builderEmail: string;
+  status: string;
+  createdAt: string;
+}
+
 export interface Job {
   id: number;
   title: string;
@@ -39,22 +50,12 @@ export interface Job {
   stripeSessionId?: string | null;
   cancelledAt?: string | null;
   createdAt: string;
+  bidsList?: Bid[];
 }
 
 export type DashboardClientJob = Job & ({
   acceptedBuilderName: string | null;
 });
-
-export interface Bid {
-  id: number;
-  jobId: number;
-  price: number;
-  deliveryTime: string;
-  coverNote: string;
-  builderEmail: string;
-  status: string;
-  createdAt: string;
-}
 
 export type DashboardBuilderJob = Job & {
   myBid: Bid;
@@ -119,7 +120,9 @@ export interface ReleaseResponse {
 
 export interface CancelJobResponse {
   success: boolean;
-  refundAmount: number;
+  refunded: boolean;
+  refundAmount?: number;
+  message?: string;
 }
 
 export interface RevisionBody {

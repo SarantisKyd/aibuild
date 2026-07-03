@@ -689,6 +689,10 @@ components:
         createdAt:
           type: string
           format: date-time
+        bidsList:
+          type: array
+          items:
+            $ref: "#/components/schemas/Bid"
       required:
         - id
         - title
@@ -868,11 +872,15 @@ components:
       properties:
         success:
           type: boolean
+        refunded:
+          type: boolean
         refundAmount:
           type: integer
+        message:
+          type: string
       required:
         - success
-        - refundAmount
+        - refunded
 
     RevisionBody:
       type: object

@@ -78,7 +78,7 @@ export default function JobDetailDialog({
   const [disputeReason, setDisputeReason] = useState("");
 
   const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false);
-  const [cancelResult, setCancelResult] = useState<{ refundAmount: number } | null>(null);
+  const [cancelResult, setCancelResult] = useState<{ refunded: boolean; refundAmount?: number; message?: string } | null>(null);
 
   const [releaseResult, setReleaseResult] = useState<{ builderPaid: number } | null>(null);
 
@@ -247,7 +247,7 @@ export default function JobDetailDialog({
       onSuccess: (data) => {
         invalidateJobs();
         setCancelConfirmOpen(false);
-        setCancelResult({ refundAmount: data.refundAmount });
+        setCancelResult({ refunded: data.refunded, refundAmount: data.refundAmount, message: data.message });
       },
       onError: (err) => {
         const message = (err as unknown as { error?: string })?.error ?? "Failed to cancel job. Please try again.";
@@ -268,7 +268,9 @@ export default function JobDetailDialog({
           <div className="text-4xl">✅</div>
           <h2 className="text-xl font-bold">Job cancelled</h2>
           <p className="text-muted-foreground">
-            Your job has been cancelled and ${cancelResult.refundAmount} has been refunded to your original payment method.
+            {cancelResult.refunded
+              ? `Your job has been cancelled and $${cancelResult.refundAmount} has been refunded to your original payment method.`
+              : cancelResult.message ?? "Your job has been cancelled. No payment was made so no refund is needed."}
           </p>
         </div>
       </DialogContent>

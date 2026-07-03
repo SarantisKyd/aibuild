@@ -1,2 +1,3 @@
 - [Adapting literal feature specs to this codebase](spec-adaptation.md) — user specs may name statuses/files that don't exist here; map concepts, don't copy literally.
 - [JobDetailDialog identity via localStorage](job-detail-dialog-identity.md) — reusing this modal elsewhere requires setting clientEmail/builderEmail localStorage keys yourself.
+- [Stripe webhook secret sourcing](stripe-webhook-config.md) — read STRIPE_WEBHOOK_SECRET only from env; no DB/schema sync, it caused startup errors before.

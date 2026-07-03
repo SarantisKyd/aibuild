@@ -3,7 +3,7 @@ import cors from "cors";
 import pinoHttp from "pino-http";
 import router from "./routes";
 import { logger } from "./lib/logger";
-import { WebhookHandlers } from "./webhookHandlers";
+import { getUncachableStripeClient } from "./stripeClient";
 import { db } from "@workspace/db";
 import { jobsTable, buildersTable, toolsTable, purchasesTable } from "@workspace/db";
 import { eq, sql } from "drizzle-orm";
@@ -20,10 +20,15 @@ app.post(
       return;
     }
     const sig = Array.isArray(signature) ? signature[0] : signature;
+    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+    if (!webhookSecret) {
+      res.status(400).json({ error: "Webhook secret not configured" });
+      return;
+    }
     try {
-      await WebhookHandlers.processWebhook(req.body as Buffer, sig);
-
-      const event = JSON.parse((req.body as Buffer).toString()) as {
+      const stripe = await getUncachableStripeClient();
+      const rawEvent = stripe.webhooks.constructEvent(req.body as Buffer, sig, webhookSecret);
+      const event = rawEvent as unknown as {
         type: string;
         data: { object: Record<string, unknown> };
       };
