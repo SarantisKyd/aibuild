@@ -58,6 +58,12 @@ router.get("/admin/disputed-jobs", async (req, res) => {
   res.json(jobs);
 });
 
+router.get("/admin/cancelled-jobs", async (req, res) => {
+  if (!checkAdminPassword(req, res)) return;
+  const jobs = await db.select().from(jobsTable).where(eq(jobsTable.status, "cancelled"));
+  res.json(jobs);
+});
+
 router.get("/admin/purchases", async (req, res) => {
   if (!checkAdminPassword(req, res)) return;
   const purchases = await db.select().from(purchasesTable).orderBy(purchasesTable.purchasedAt);

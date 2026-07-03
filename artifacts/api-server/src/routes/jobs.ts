@@ -15,12 +15,13 @@ router.get("/jobs", async (req, res) => {
     jobs = await db
       .select()
       .from(jobsTable)
-      .where(eq(jobsTable.category, category))
+      .where(and(eq(jobsTable.category, category), ne(jobsTable.status, "cancelled")))
       .orderBy(desc(jobsTable.featured), jobsTable.createdAt);
   } else {
     jobs = await db
       .select()
       .from(jobsTable)
+      .where(ne(jobsTable.status, "cancelled"))
       .orderBy(desc(jobsTable.featured), jobsTable.createdAt);
   }
   res.json(ListJobsResponse.parse(jobs));
@@ -50,6 +51,7 @@ async function createFundCheckout(job: { id: number; title: string; budget: numb
       cancel_url: `${appUrl}/?cancelled=${job.id}`,
       metadata: { jobId: String(job.id), type: "escrow_fund" },
     });
+    await db.update(jobsTable).set({ stripeSessionId: session.id }).where(eq(jobsTable.id, job.id));
     return session.url;
   } catch (err) {
     console.error("Stripe error:", err instanceof Error ? err.message : String(err));
@@ -326,6 +328,52 @@ router.post("/jobs/:id/dispute", async (req, res) => {
 
   logger.info({ jobId }, "Dispute opened");
   res.json(updatedJob);
+});
+
+router.post("/jobs/:id/cancel", async (req, res) => {
+  const jobId = Number(req.params.id);
+  if (isNaN(jobId)) {
+    res.status(400).json({ error: "Invalid job id" });
+    return;
+  }
+  const [job] = await db.select().from(jobsTable).where(eq(jobsTable.id, jobId));
+  if (!job) {
+    res.status(404).json({ error: "Job not found" });
+    return;
+  }
+  if (job.acceptedBid) {
+    res.status(400).json({ error: "Cannot cancel — builder already accepted. Open a dispute instead." });
+    return;
+  }
+  if (job.status !== "open") {
+    res.status(400).json({ error: "This job cannot be cancelled." });
+    return;
+  }
+
+  if (job.stripeSessionId) {
+    try {
+      const stripe = await getUncachableStripeClient();
+      const session = await stripe.checkout.sessions.retrieve(job.stripeSessionId);
+      if (session.payment_status === "paid" && session.payment_intent) {
+        const paymentIntentId =
+          typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent.id;
+        await stripe.refunds.create({ payment_intent: paymentIntentId });
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      logger.error({ jobId, err: msg }, "Stripe refund failed");
+      res.status(500).json({ error: msg });
+      return;
+    }
+  }
+
+  await db
+    .update(jobsTable)
+    .set({ status: "cancelled", cancelledAt: new Date() })
+    .where(eq(jobsTable.id, jobId));
+
+  logger.info({ jobId }, "Job cancelled and refunded");
+  res.json({ success: true, refundAmount: job.budget });
 });
 
 router.post("/jobs/:id/feature", async (req, res) => {

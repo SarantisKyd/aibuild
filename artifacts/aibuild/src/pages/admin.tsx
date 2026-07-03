@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 
 const ADMIN_PASSWORD = "aibuild2024";
-const TABS = ["Pending", "Approved", "Disputes"] as const;
+const TABS = ["Pending", "Approved", "Disputes", "Cancelled"] as const;
 type Tab = typeof TABS[number];
 
 interface Tool {
@@ -45,6 +45,14 @@ interface DisputedJob {
   status: string;
 }
 
+interface CancelledJob {
+  id: number;
+  title: string;
+  budget: number;
+  clientEmail: string;
+  cancelledAt: string | null;
+}
+
 export default function Admin() {
   const [authed, setAuthed] = useState(false);
   const [pwInput, setPwInput] = useState("");
@@ -53,19 +61,22 @@ export default function Admin() {
   const [tools, setTools] = useState<Tool[]>([]);
   const [purchases, setPurchases] = useState<Purchase[]>([]);
   const [disputedJobs, setDisputedJobs] = useState<DisputedJob[]>([]);
+  const [cancelledJobs, setCancelledJobs] = useState<CancelledJob[]>([]);
   const [loading, setLoading] = useState(false);
   const [, setTick] = useState(0);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
-    const [tr, pr, dr] = await Promise.all([
+    const [tr, pr, dr, cr] = await Promise.all([
       fetch("/api/admin/tools", { headers: { "x-admin-password": ADMIN_PASSWORD } }),
       fetch("/api/admin/purchases", { headers: { "x-admin-password": ADMIN_PASSWORD } }),
       fetch("/api/admin/disputed-jobs", { headers: { "x-admin-password": ADMIN_PASSWORD } }),
+      fetch("/api/admin/cancelled-jobs", { headers: { "x-admin-password": ADMIN_PASSWORD } }),
     ]);
     if (tr.ok) setTools(await tr.json() as Tool[]);
     if (pr.ok) setPurchases(await pr.json() as Purchase[]);
     if (dr.ok) setDisputedJobs(await dr.json() as DisputedJob[]);
+    if (cr.ok) setCancelledJobs(await cr.json() as CancelledJob[]);
     setLoading(false);
   }, []);
 
@@ -179,6 +190,11 @@ export default function Admin() {
                 {purchases.length + disputedJobs.length}
               </span>
             )}
+            {t === "Cancelled" && cancelledJobs.length > 0 && (
+              <span className="ml-1.5 bg-gray-100 text-gray-700 text-xs rounded-full px-1.5 py-0.5">
+                {cancelledJobs.length}
+              </span>
+            )}
           </button>
         ))}
       </div>
@@ -281,6 +297,30 @@ export default function Admin() {
             </Card>
             ))}
           </div>
+        </div>
+      )}
+
+      {tab === "Cancelled" && (
+        <div className="space-y-4">
+          {cancelledJobs.length === 0 && (
+            <p className="text-muted-foreground text-sm">No cancelled jobs.</p>
+          )}
+          {cancelledJobs.map((job) => (
+            <Card key={job.id}>
+              <CardContent className="pt-4 space-y-2 text-sm">
+                <div className="flex items-center gap-2">
+                  <p className="font-semibold text-base">{job.title}</p>
+                  <Badge variant="secondary">Cancelled</Badge>
+                </div>
+                <p><span className="font-medium">Budget:</span> ${job.budget}</p>
+                <p><span className="font-medium">Client:</span> {job.clientEmail}</p>
+                <p>
+                  <span className="font-medium">Cancelled:</span>{" "}
+                  {job.cancelledAt ? new Date(job.cancelledAt).toLocaleString() : "—"}
+                </p>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       )}
     </div>

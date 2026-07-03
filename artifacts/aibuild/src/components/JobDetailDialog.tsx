@@ -7,6 +7,17 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
 import {
   useGetJob,
@@ -17,6 +28,7 @@ import {
   useReleaseJobPayment,
   useRequestRevision,
   useDisputeJob,
+  useCancelJob,
   getListJobsQueryKey,
   getListJobBidsQueryKey,
   getGetJobQueryKey,
@@ -64,6 +76,9 @@ export default function JobDetailDialog({
 
   const [disputeOpen, setDisputeOpen] = useState(false);
   const [disputeReason, setDisputeReason] = useState("");
+
+  const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false);
+  const [cancelResult, setCancelResult] = useState<{ refundAmount: number } | null>(null);
 
   const [releaseResult, setReleaseResult] = useState<{ builderPaid: number } | null>(null);
 
@@ -227,6 +242,39 @@ export default function JobDetailDialog({
     disputeMutation.mutate({ id: job.id, data: { reason: disputeReason.trim() } });
   };
 
+  const cancelMutation = useCancelJob({
+    mutation: {
+      onSuccess: (data) => {
+        invalidateJobs();
+        setCancelConfirmOpen(false);
+        setCancelResult({ refundAmount: data.refundAmount });
+      },
+      onError: (err) => {
+        const message = (err as unknown as { error?: string })?.error ?? "Failed to cancel job. Please try again.";
+        setCancelConfirmOpen(false);
+        toast({ title: "Error", description: message, variant: "destructive" });
+      },
+    },
+  });
+
+  const handleCancelConfirm = () => {
+    cancelMutation.mutate({ id: job.id });
+  };
+
+  if (cancelResult) {
+    return (
+      <DialogContent className="max-w-lg" data-testid={`modal-job-${job.id}`}>
+        <div className="py-8 text-center space-y-3">
+          <div className="text-4xl">✅</div>
+          <h2 className="text-xl font-bold">Job cancelled</h2>
+          <p className="text-muted-foreground">
+            Your job has been cancelled and ${cancelResult.refundAmount} has been refunded to your original payment method.
+          </p>
+        </div>
+      </DialogContent>
+    );
+  }
+
   if (releaseResult) {
     return (
       <DialogContent className="max-w-lg" data-testid={`modal-job-${job.id}`}>
@@ -373,6 +421,18 @@ export default function JobDetailDialog({
                 </Button>
               </form>
             </div>
+
+            {isClient && (
+              <div className="border-t pt-6 text-center">
+                <Button
+                  variant="destructive"
+                  onClick={() => setCancelConfirmOpen(true)}
+                  data-testid="btn-cancel-job"
+                >
+                  Cancel job &amp; get refund
+                </Button>
+              </div>
+            )}
           </>
         )}
 
@@ -415,6 +475,49 @@ export default function JobDetailDialog({
               </>
             ) : (
               <p className="text-center text-muted-foreground py-4">Builder selected — work in progress.</p>
+            )}
+
+            {isClient && (
+              <div className="text-center pt-2">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span tabIndex={0}>
+                        <Button variant="destructive" disabled data-testid="btn-cancel-job-disabled">
+                          Cancel job &amp; get refund
+                        </Button>
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      A builder has already been accepted. Open a dispute instead.
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                <div className="pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setDisputeOpen((o) => !o)}
+                    className="text-sm text-muted-foreground underline underline-offset-2 hover:text-foreground"
+                    data-testid="btn-open-dispute-in-progress"
+                  >
+                    Something wrong? Open a dispute
+                  </button>
+                </div>
+                {disputeOpen && (
+                  <form onSubmit={handleDisputeSubmit} className="space-y-2 pt-2 text-left">
+                    <Textarea
+                      placeholder="Describe the issue..."
+                      rows={3}
+                      value={disputeReason}
+                      onChange={(e) => setDisputeReason(e.target.value)}
+                      data-testid="input-dispute-reason-in-progress"
+                    />
+                    <Button type="submit" size="sm" variant="destructive" disabled={disputeMutation.isPending} data-testid="btn-submit-dispute-in-progress">
+                      {disputeMutation.isPending ? "Submitting…" : "Submit dispute"}
+                    </Button>
+                  </form>
+                )}
+              </div>
             )}
           </div>
         )}
@@ -516,6 +619,28 @@ export default function JobDetailDialog({
           </div>
         )}
       </div>
+
+      <AlertDialog open={cancelConfirmOpen} onOpenChange={setCancelConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cancel this job?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to cancel this job? Any funds you've paid will be refunded to your original payment method.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel data-testid="btn-cancel-confirm-dismiss">Keep job</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleCancelConfirm}
+              disabled={cancelMutation.isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              data-testid="btn-cancel-confirm"
+            >
+              {cancelMutation.isPending ? "Cancelling…" : "Yes, cancel & refund"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </DialogContent>
   );
 }

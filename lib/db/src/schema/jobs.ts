@@ -29,6 +29,8 @@ export const jobsTable = pgTable("jobs", {
   deliveryLink: text("delivery_link"),
   revisionNote: text("revision_note"),
   disputeReason: text("dispute_reason"),
+  stripeSessionId: text("stripe_session_id"),
+  cancelledAt: timestamp("cancelled_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
@@ -41,6 +43,8 @@ export const insertJobSchema = createInsertSchema(jobsTable).omit({
   deliveryLink: true,
   revisionNote: true,
   disputeReason: true,
+  stripeSessionId: true,
+  cancelledAt: true,
 });
 export type InsertJob = z.infer<typeof insertJobSchema>;
 export type Job = typeof jobsTable.$inferSelect;

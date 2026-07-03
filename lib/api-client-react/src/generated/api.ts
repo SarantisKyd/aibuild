@@ -24,6 +24,7 @@ import type {
   Builder,
   BuilderSubscribeBody,
   BuilderSubscribeResponse,
+  CancelJobResponse,
   CreateBidBody,
   CreateJobBody,
   CreateJobResponse,
@@ -1020,6 +1021,153 @@ export const useDisputeJob = <TError = ErrorType<ErrorResponse>,
       > => {
       return useMutation(getDisputeJobMutationOptions(options));
     }
+
+export const getCancelJobUrl = (id: number,) => {
+
+
+
+
+  return `/api/jobs/${id}/cancel`
+}
+
+/**
+ * @summary Cancel a job and refund the client before a builder is accepted
+ */
+export const cancelJob = async (id: number, options?: RequestInit): Promise<CancelJobResponse> => {
+
+  return customFetch<CancelJobResponse>(getCancelJobUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getCancelJobMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof cancelJob>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof cancelJob>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['cancelJob'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof cancelJob>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  cancelJob(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CancelJobMutationResult = NonNullable<Awaited<ReturnType<typeof cancelJob>>>
+
+    export type CancelJobMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Cancel a job and refund the client before a builder is accepted
+ */
+export const useCancelJob = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof cancelJob>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof cancelJob>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getCancelJobMutationOptions(options));
+    }
+
+export const getListCancelledJobsUrl = () => {
+
+
+
+
+  return `/api/admin/cancelled-jobs`
+}
+
+/**
+ * @summary List all cancelled jobs
+ */
+export const listCancelledJobs = async ( options?: RequestInit): Promise<Job[]> => {
+
+  return customFetch<Job[]>(getListCancelledJobsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListCancelledJobsQueryKey = () => {
+    return [
+    `/api/admin/cancelled-jobs`
+    ] as const;
+    }
+
+
+export const getListCancelledJobsQueryOptions = <TData = Awaited<ReturnType<typeof listCancelledJobs>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listCancelledJobs>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListCancelledJobsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listCancelledJobs>>> = ({ signal }) => listCancelledJobs({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listCancelledJobs>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListCancelledJobsQueryResult = NonNullable<Awaited<ReturnType<typeof listCancelledJobs>>>
+export type ListCancelledJobsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List all cancelled jobs
+ */
+
+export function useListCancelledJobs<TData = Awaited<ReturnType<typeof listCancelledJobs>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listCancelledJobs>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListCancelledJobsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getListDisputedJobsUrl = () => {
 

@@ -383,6 +383,52 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /jobs/{id}/cancel:
+    post:
+      operationId: cancelJob
+      tags: [jobs]
+      summary: Cancel a job and refund the client before a builder is accepted
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Job cancelled and refunded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CancelJobResponse"
+        "400":
+          description: Job cannot be cancelled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Job not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /admin/cancelled-jobs:
+    get:
+      operationId: listCancelledJobs
+      tags: [admin]
+      summary: List all cancelled jobs
+      responses:
+        "200":
+          description: List of cancelled jobs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Job"
+
   /admin/disputed-jobs:
     get:
       operationId: listDisputedJobs
@@ -587,6 +633,13 @@ components:
         disputeReason:
           type: string
           nullable: true
+        stripeSessionId:
+          type: string
+          nullable: true
+        cancelledAt:
+          type: string
+          format: date-time
+          nullable: true
         createdAt:
           type: string
           format: date-time
@@ -742,6 +795,17 @@ components:
         - success
         - builderPaid
         - platformFee
+
+    CancelJobResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        refundAmount:
+          type: integer
+      required:
+        - success
+        - refundAmount
 
     RevisionBody:
       type: object

@@ -49,6 +49,8 @@ export const ListJobsResponseItem = zod.object({
   "deliveryLink": zod.string().nullish(),
   "revisionNote": zod.string().nullish(),
   "disputeReason": zod.string().nullish(),
+  "stripeSessionId": zod.string().nullish(),
+  "cancelledAt": zod.coerce.date().nullish(),
   "createdAt": zod.coerce.date()
 })
 export const ListJobsResponse = zod.array(ListJobsResponseItem)
@@ -103,6 +105,8 @@ export const CreateJobResponse = zod.object({
   "deliveryLink": zod.string().nullish(),
   "revisionNote": zod.string().nullish(),
   "disputeReason": zod.string().nullish(),
+  "stripeSessionId": zod.string().nullish(),
+  "cancelledAt": zod.coerce.date().nullish(),
   "createdAt": zod.coerce.date()
 }),
   "checkoutUrl": zod.string().nullish()
@@ -153,6 +157,8 @@ export const GetJobResponse = zod.object({
   "deliveryLink": zod.string().nullish(),
   "revisionNote": zod.string().nullish(),
   "disputeReason": zod.string().nullish(),
+  "stripeSessionId": zod.string().nullish(),
+  "cancelledAt": zod.coerce.date().nullish(),
   "createdAt": zod.coerce.date()
 })
 
@@ -253,6 +259,8 @@ export const AcceptBidResponse = zod.object({
   "deliveryLink": zod.string().nullish(),
   "revisionNote": zod.string().nullish(),
   "disputeReason": zod.string().nullish(),
+  "stripeSessionId": zod.string().nullish(),
+  "cancelledAt": zod.coerce.date().nullish(),
   "createdAt": zod.coerce.date()
 })
 
@@ -299,6 +307,8 @@ export const DeliverJobResponse = zod.object({
   "deliveryLink": zod.string().nullish(),
   "revisionNote": zod.string().nullish(),
   "disputeReason": zod.string().nullish(),
+  "stripeSessionId": zod.string().nullish(),
+  "cancelledAt": zod.coerce.date().nullish(),
   "createdAt": zod.coerce.date()
 })
 
@@ -356,6 +366,8 @@ export const RequestRevisionResponse = zod.object({
   "deliveryLink": zod.string().nullish(),
   "revisionNote": zod.string().nullish(),
   "disputeReason": zod.string().nullish(),
+  "stripeSessionId": zod.string().nullish(),
+  "cancelledAt": zod.coerce.date().nullish(),
   "createdAt": zod.coerce.date()
 })
 
@@ -399,8 +411,58 @@ export const DisputeJobResponse = zod.object({
   "deliveryLink": zod.string().nullish(),
   "revisionNote": zod.string().nullish(),
   "disputeReason": zod.string().nullish(),
+  "stripeSessionId": zod.string().nullish(),
+  "cancelledAt": zod.coerce.date().nullish(),
   "createdAt": zod.coerce.date()
 })
+
+
+/**
+ * @summary Cancel a job and refund the client before a builder is accepted
+ */
+export const CancelJobParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const CancelJobResponse = zod.object({
+  "success": zod.boolean(),
+  "refundAmount": zod.number()
+})
+
+
+/**
+ * @summary List all cancelled jobs
+ */
+export const ListCancelledJobsResponseItem = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "budget": zod.number(),
+  "deadline": zod.string(),
+  "category": zod.string(),
+  "skills": zod.array(zod.string()),
+  "urgent": zod.boolean(),
+  "isNew": zod.boolean(),
+  "bids": zod.number(),
+  "featured": zod.boolean(),
+  "status": zod.string(),
+  "clientEmail": zod.string(),
+  "acceptedBid": zod.object({
+  "id": zod.number(),
+  "price": zod.number(),
+  "deliveryTime": zod.string(),
+  "coverNote": zod.string(),
+  "builderEmail": zod.string()
+}).nullish(),
+  "deliveryNote": zod.string().nullish(),
+  "deliveryLink": zod.string().nullish(),
+  "revisionNote": zod.string().nullish(),
+  "disputeReason": zod.string().nullish(),
+  "stripeSessionId": zod.string().nullish(),
+  "cancelledAt": zod.coerce.date().nullish(),
+  "createdAt": zod.coerce.date()
+})
+export const ListCancelledJobsResponse = zod.array(ListCancelledJobsResponseItem)
 
 
 /**
@@ -431,6 +493,8 @@ export const ListDisputedJobsResponseItem = zod.object({
   "deliveryLink": zod.string().nullish(),
   "revisionNote": zod.string().nullish(),
   "disputeReason": zod.string().nullish(),
+  "stripeSessionId": zod.string().nullish(),
+  "cancelledAt": zod.coerce.date().nullish(),
   "createdAt": zod.coerce.date()
 })
 export const ListDisputedJobsResponse = zod.array(ListDisputedJobsResponseItem)

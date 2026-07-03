@@ -36,6 +36,8 @@ export interface Job {
   deliveryLink?: string | null;
   revisionNote?: string | null;
   disputeReason?: string | null;
+  stripeSessionId?: string | null;
+  cancelledAt?: string | null;
   createdAt: string;
 }
 
@@ -105,6 +107,11 @@ export interface ReleaseResponse {
   success: boolean;
   builderPaid: number;
   platformFee: number;
+}
+
+export interface CancelJobResponse {
+  success: boolean;
+  refundAmount: number;
 }
 
 export interface RevisionBody {

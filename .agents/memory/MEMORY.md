@@ -1,0 +1,1 @@
+- [Adapting literal feature specs to this codebase](spec-adaptation.md) — user specs may name statuses/files that don't exist here; map concepts, don't copy literally.
