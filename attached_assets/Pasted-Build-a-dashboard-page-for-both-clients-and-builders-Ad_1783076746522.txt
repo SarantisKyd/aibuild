@@ -1,0 +1,53 @@
+Build a dashboard page for both clients and builders. Add a new nav link "My dashboard" that goes to /dashboard.
+The page has a single email input at the top:
+
+Label: "Enter your email to see your dashboard"
+A "View dashboard" button
+When submitted, fetch both GET /api/dashboard/client?email=X and GET /api/dashboard/builder?email=X and show whichever has data, or both if the person is both a client and a builder
+
+Client dashboard section — "Jobs I've posted"
+Show a list of all jobs where clientEmail matches. Each job shows:
+
+Job title
+Budget
+Status badge (funded, in_progress, delivered, complete, cancelled)
+Number of bids received
+Deadline
+A "View job" button that opens the full job detail modal
+If status is 'delivered' show a highlighted "Review & release payment →" button in green that opens the job detail directly to the approval section
+If status is 'in_progress' show "Work in progress" with the accepted builder's name
+If status is 'funded' and bids > 0 show "X builders have bid — review bids →" in blue
+
+Builder dashboard section — "Jobs I'm working on"
+Show all jobs where the builder's email appears in job.bids (any bid) or job.acceptedBid.builderEmail. Split into two tabs:
+
+"Active" — jobs where their bid was accepted (status in_progress or delivered)
+"Bids placed" — jobs where they submitted a bid but haven't been accepted yet
+
+Each active job shows:
+
+Job title
+Client budget
+Deadline
+Delivery status
+If status is 'in_progress' show a "Submit your work" button that opens the delivery form
+If status is 'delivered' show "Work submitted — waiting for client approval" in yellow
+If status is 'complete' show "✅ Paid — $[amount]" in green
+
+Each pending bid shows:
+
+Job title
+Their bid amount
+How many other bids the job has
+Status: "Pending" / "Not selected" / "Accepted"
+
+Backend routes needed:
+Add GET /api/dashboard/client?email=X — returns all jobs where clientEmail === email
+Add GET /api/dashboard/builder?email=X — returns all jobs where any bid's builderEmail === email, with each job including the builder's specific bid details
+Store email in localStorage automatically:
+
+When a client posts a job, store their email as localStorage.setItem('userEmail', email)
+When a builder signs up, store their email as localStorage.setItem('userEmail', email)
+On the dashboard page, pre-fill the email input from localStorage.getItem('userEmail') so returning users see their dashboard immediately without typing
+
+Do not change any existing pages, job board, or styles.

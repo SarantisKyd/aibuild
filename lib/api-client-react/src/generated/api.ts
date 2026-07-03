@@ -29,6 +29,10 @@ import type {
   CreateJobBody,
   CreateJobResponse,
   CreateToolBody,
+  DashboardBuilderJob,
+  DashboardBuilderParams,
+  DashboardClientJob,
+  DashboardClientParams,
   DeliverJobBody,
   DisputeBody,
   ErrorResponse,
@@ -1234,6 +1238,174 @@ export function useListDisputedJobs<TData = Awaited<ReturnType<typeof listDisput
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getListDisputedJobsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getDashboardClientUrl = (params: DashboardClientParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/dashboard/client?${stringifiedParams}` : `/api/dashboard/client`
+}
+
+/**
+ * @summary List all jobs posted by a client, with the accepted builder's name when set
+ */
+export const dashboardClient = async (params: DashboardClientParams, options?: RequestInit): Promise<DashboardClientJob[]> => {
+
+  return customFetch<DashboardClientJob[]>(getDashboardClientUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getDashboardClientQueryKey = (params?: DashboardClientParams,) => {
+    return [
+    `/api/dashboard/client`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getDashboardClientQueryOptions = <TData = Awaited<ReturnType<typeof dashboardClient>>, TError = ErrorType<unknown>>(params: DashboardClientParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof dashboardClient>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getDashboardClientQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof dashboardClient>>> = ({ signal }) => dashboardClient(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof dashboardClient>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type DashboardClientQueryResult = NonNullable<Awaited<ReturnType<typeof dashboardClient>>>
+export type DashboardClientQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List all jobs posted by a client, with the accepted builder's name when set
+ */
+
+export function useDashboardClient<TData = Awaited<ReturnType<typeof dashboardClient>>, TError = ErrorType<unknown>>(
+ params: DashboardClientParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof dashboardClient>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getDashboardClientQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getDashboardBuilderUrl = (params: DashboardBuilderParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/dashboard/builder?${stringifiedParams}` : `/api/dashboard/builder`
+}
+
+/**
+ * @summary List all jobs a builder has bid on, with that builder's own bid attached
+ */
+export const dashboardBuilder = async (params: DashboardBuilderParams, options?: RequestInit): Promise<DashboardBuilderJob[]> => {
+
+  return customFetch<DashboardBuilderJob[]>(getDashboardBuilderUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getDashboardBuilderQueryKey = (params?: DashboardBuilderParams,) => {
+    return [
+    `/api/dashboard/builder`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getDashboardBuilderQueryOptions = <TData = Awaited<ReturnType<typeof dashboardBuilder>>, TError = ErrorType<unknown>>(params: DashboardBuilderParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof dashboardBuilder>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getDashboardBuilderQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof dashboardBuilder>>> = ({ signal }) => dashboardBuilder(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof dashboardBuilder>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type DashboardBuilderQueryResult = NonNullable<Awaited<ReturnType<typeof dashboardBuilder>>>
+export type DashboardBuilderQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List all jobs a builder has bid on, with that builder's own bid attached
+ */
+
+export function useDashboardBuilder<TData = Awaited<ReturnType<typeof dashboardBuilder>>, TError = ErrorType<unknown>>(
+ params: DashboardBuilderParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof dashboardBuilder>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getDashboardBuilderQueryOptions(params,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

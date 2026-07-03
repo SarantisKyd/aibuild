@@ -9,6 +9,7 @@ export function NavBar() {
     { href: "/board", label: "Find jobs" },
     { href: "/post", label: "Post a job" },
     { href: "/builder", label: "For builders" },
+    { href: "/dashboard", label: "My dashboard" },
   ];
 
   return (

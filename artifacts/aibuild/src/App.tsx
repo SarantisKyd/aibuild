@@ -11,6 +11,7 @@ import Tools from "@/pages/tools";
 import Builder from "@/pages/builder";
 import ToolAccess from "@/pages/tool-access";
 import Admin from "@/pages/admin";
+import Dashboard from "@/pages/dashboard";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient();
@@ -25,6 +26,7 @@ function Router() {
       <Route path="/builder" component={Builder} />
       <Route path="/tool-access" component={ToolAccess} />
       <Route path="/admin" component={Admin} />
+      <Route path="/dashboard" component={Dashboard} />
       <Route component={NotFound} />
     </Switch>
   );

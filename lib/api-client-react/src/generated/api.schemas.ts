@@ -41,6 +41,25 @@ export interface Job {
   createdAt: string;
 }
 
+export type DashboardClientJob = Job & ({
+  acceptedBuilderName: string | null;
+});
+
+export interface Bid {
+  id: number;
+  jobId: number;
+  price: number;
+  deliveryTime: string;
+  coverNote: string;
+  builderEmail: string;
+  status: string;
+  createdAt: string;
+}
+
+export type DashboardBuilderJob = Job & {
+  myBid: Bid;
+};
+
 export interface CreateJobResponse {
   job: Job;
   checkoutUrl?: string | null;
@@ -73,17 +92,6 @@ export interface CreateJobBody {
   urgent?: boolean;
   isNew?: boolean;
   clientEmail: string;
-}
-
-export interface Bid {
-  id: number;
-  jobId: number;
-  price: number;
-  deliveryTime: string;
-  coverNote: string;
-  builderEmail: string;
-  status: string;
-  createdAt: string;
 }
 
 export interface CreateBidBody {
@@ -212,4 +220,12 @@ export const ListJobsCategory = {
   agent: 'agent',
   data: 'data',
 } as const;
+
+export type DashboardClientParams = {
+email: string;
+};
+
+export type DashboardBuilderParams = {
+email: string;
+};
 

@@ -68,6 +68,7 @@ export default function PostJob() {
       return;
     }
     localStorage.setItem("clientEmail", email.trim().toLowerCase());
+    localStorage.setItem("userEmail", email.trim().toLowerCase());
     createJobMutation.mutate({
       data: {
         title: title.trim(),

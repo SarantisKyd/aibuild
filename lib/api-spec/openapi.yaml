@@ -20,6 +20,8 @@ tags:
     description: Builder profile and subscription operations
   - name: admin
     description: Admin operations
+  - name: dashboard
+    description: Client and builder dashboard operations
 paths:
   /healthz:
     get:
@@ -444,6 +446,50 @@ paths:
                 items:
                   $ref: "#/components/schemas/Job"
 
+  /dashboard/client:
+    get:
+      operationId: dashboardClient
+      tags: [dashboard]
+      summary: List all jobs posted by a client, with the accepted builder's name when set
+      parameters:
+        - name: email
+          in: query
+          required: true
+          schema:
+            type: string
+            format: email
+      responses:
+        "200":
+          description: Jobs posted by this client
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DashboardClientJob"
+
+  /dashboard/builder:
+    get:
+      operationId: dashboardBuilder
+      tags: [dashboard]
+      summary: List all jobs a builder has bid on, with that builder's own bid attached
+      parameters:
+        - name: email
+          in: query
+          required: true
+          schema:
+            type: string
+            format: email
+      responses:
+        "200":
+          description: Jobs this builder has bid on
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DashboardBuilderJob"
+
   /builders/{email}:
     get:
       operationId: getBuilder
@@ -658,6 +704,27 @@ components:
         - status
         - clientEmail
         - createdAt
+
+    DashboardClientJob:
+      allOf:
+        - $ref: "#/components/schemas/Job"
+        - type: object
+          properties:
+            acceptedBuilderName:
+              type: string
+              nullable: true
+          required:
+            - acceptedBuilderName
+
+    DashboardBuilderJob:
+      allOf:
+        - $ref: "#/components/schemas/Job"
+        - type: object
+          properties:
+            myBid:
+              $ref: "#/components/schemas/Bid"
+          required:
+            - myBid
 
     CreateJobResponse:
       type: object

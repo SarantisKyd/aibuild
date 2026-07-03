@@ -501,6 +501,97 @@ export const ListDisputedJobsResponse = zod.array(ListDisputedJobsResponseItem)
 
 
 /**
+ * @summary List all jobs posted by a client, with the accepted builder's name when set
+ */
+export const DashboardClientQueryParams = zod.object({
+  "email": zod.coerce.string().email()
+})
+
+export const DashboardClientResponseItem = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "budget": zod.number(),
+  "deadline": zod.string(),
+  "category": zod.string(),
+  "skills": zod.array(zod.string()),
+  "urgent": zod.boolean(),
+  "isNew": zod.boolean(),
+  "bids": zod.number(),
+  "featured": zod.boolean(),
+  "status": zod.string(),
+  "clientEmail": zod.string(),
+  "acceptedBid": zod.object({
+  "id": zod.number(),
+  "price": zod.number(),
+  "deliveryTime": zod.string(),
+  "coverNote": zod.string(),
+  "builderEmail": zod.string()
+}).nullish(),
+  "deliveryNote": zod.string().nullish(),
+  "deliveryLink": zod.string().nullish(),
+  "revisionNote": zod.string().nullish(),
+  "disputeReason": zod.string().nullish(),
+  "stripeSessionId": zod.string().nullish(),
+  "cancelledAt": zod.coerce.date().nullish(),
+  "createdAt": zod.coerce.date()
+}).and(zod.object({
+  "acceptedBuilderName": zod.string().nullable()
+}))
+export const DashboardClientResponse = zod.array(DashboardClientResponseItem)
+
+
+/**
+ * @summary List all jobs a builder has bid on, with that builder's own bid attached
+ */
+export const DashboardBuilderQueryParams = zod.object({
+  "email": zod.coerce.string().email()
+})
+
+export const DashboardBuilderResponseItem = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "budget": zod.number(),
+  "deadline": zod.string(),
+  "category": zod.string(),
+  "skills": zod.array(zod.string()),
+  "urgent": zod.boolean(),
+  "isNew": zod.boolean(),
+  "bids": zod.number(),
+  "featured": zod.boolean(),
+  "status": zod.string(),
+  "clientEmail": zod.string(),
+  "acceptedBid": zod.object({
+  "id": zod.number(),
+  "price": zod.number(),
+  "deliveryTime": zod.string(),
+  "coverNote": zod.string(),
+  "builderEmail": zod.string()
+}).nullish(),
+  "deliveryNote": zod.string().nullish(),
+  "deliveryLink": zod.string().nullish(),
+  "revisionNote": zod.string().nullish(),
+  "disputeReason": zod.string().nullish(),
+  "stripeSessionId": zod.string().nullish(),
+  "cancelledAt": zod.coerce.date().nullish(),
+  "createdAt": zod.coerce.date()
+}).and(zod.object({
+  "myBid": zod.object({
+  "id": zod.number(),
+  "jobId": zod.number(),
+  "price": zod.number(),
+  "deliveryTime": zod.string(),
+  "coverNote": zod.string(),
+  "builderEmail": zod.string(),
+  "status": zod.string(),
+  "createdAt": zod.coerce.date()
+})
+}))
+export const DashboardBuilderResponse = zod.array(DashboardBuilderResponseItem)
+
+
+/**
  * @summary Get a builder profile by email
  */
 export const GetBuilderParams = zod.object({
