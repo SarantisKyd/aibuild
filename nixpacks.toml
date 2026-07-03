@@ -1,2 +1,8 @@
 [phases.install]
 cmds = ["pnpm install --no-frozen-lockfile"]
+
+[phases.build]
+cmds = ["pnpm --filter @workspace/aibuild run build"]
+
+[start]
+cmd = "pnpm --filter @workspace/aibuild run start"
