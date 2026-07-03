@@ -4,13 +4,21 @@ import { toolsTable, purchasesTable, jobsTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { logger } from "../lib/logger";
 
-const ADMIN_PASSWORD = "aibuild2024";
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+const FALLBACK_ADMIN_PASSWORD = "aibuild2024";
+
+if (!ADMIN_PASSWORD) {
+  logger.warn(
+    "WARNING: ADMIN_PASSWORD not set — falling back to an insecure default admin password. Set ADMIN_PASSWORD before deploying.",
+  );
+}
 
 const router: IRouter = Router();
 
 function checkAdminPassword(req: import("express").Request, res: import("express").Response): boolean {
   const pw = req.headers["x-admin-password"];
-  if (pw !== ADMIN_PASSWORD) {
+  const expected = ADMIN_PASSWORD ?? FALLBACK_ADMIN_PASSWORD;
+  if (pw !== expected) {
     res.status(403).json({ error: "Access denied." });
     return false;
   }

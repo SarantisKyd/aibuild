@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 
-const ADMIN_PASSWORD = "aibuild2024";
 const TABS = ["Pending", "Approved", "Disputes", "Cancelled"] as const;
 type Tab = typeof TABS[number];
 
@@ -56,7 +55,9 @@ interface CancelledJob {
 export default function Admin() {
   const [authed, setAuthed] = useState(false);
   const [pwInput, setPwInput] = useState("");
+  const [adminPassword, setAdminPassword] = useState("");
   const [pwError, setPwError] = useState(false);
+  const [checkingPw, setCheckingPw] = useState(false);
   const [tab, setTab] = useState<Tab>("Pending");
   const [tools, setTools] = useState<Tool[]>([]);
   const [purchases, setPurchases] = useState<Purchase[]>([]);
@@ -65,13 +66,13 @@ export default function Admin() {
   const [loading, setLoading] = useState(false);
   const [, setTick] = useState(0);
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (pw: string) => {
     setLoading(true);
     const [tr, pr, dr, cr] = await Promise.all([
-      fetch("/api/admin/tools", { headers: { "x-admin-password": ADMIN_PASSWORD } }),
-      fetch("/api/admin/purchases", { headers: { "x-admin-password": ADMIN_PASSWORD } }),
-      fetch("/api/admin/disputed-jobs", { headers: { "x-admin-password": ADMIN_PASSWORD } }),
-      fetch("/api/admin/cancelled-jobs", { headers: { "x-admin-password": ADMIN_PASSWORD } }),
+      fetch("/api/admin/tools", { headers: { "x-admin-password": pw } }),
+      fetch("/api/admin/purchases", { headers: { "x-admin-password": pw } }),
+      fetch("/api/admin/disputed-jobs", { headers: { "x-admin-password": pw } }),
+      fetch("/api/admin/cancelled-jobs", { headers: { "x-admin-password": pw } }),
     ]);
     if (tr.ok) setTools(await tr.json() as Tool[]);
     if (pr.ok) setPurchases(await pr.json() as Purchase[]);
@@ -82,14 +83,18 @@ export default function Admin() {
 
   useEffect(() => {
     if (!authed) return;
-    void fetchData();
+    void fetchData(adminPassword);
     const interval = setInterval(() => setTick((t) => t + 1), 10000);
     return () => clearInterval(interval);
-  }, [authed, fetchData]);
+  }, [authed, adminPassword, fetchData]);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (pwInput === ADMIN_PASSWORD) {
+    setCheckingPw(true);
+    const res = await fetch("/api/admin/tools", { headers: { "x-admin-password": pwInput } });
+    setCheckingPw(false);
+    if (res.ok) {
+      setAdminPassword(pwInput);
       setAuthed(true);
       setPwError(false);
     } else {
@@ -100,25 +105,25 @@ export default function Admin() {
   const approve = async (id: number) => {
     await fetch(`/api/admin/tools/${id}/approve`, {
       method: "POST",
-      headers: { "x-admin-password": ADMIN_PASSWORD },
+      headers: { "x-admin-password": adminPassword },
     });
-    void fetchData();
+    void fetchData(adminPassword);
   };
 
   const reject = async (id: number) => {
     const reason = window.prompt("Rejection reason (optional):") ?? "";
     await fetch(`/api/admin/tools/${id}/reject`, {
       method: "POST",
-      headers: { "x-admin-password": ADMIN_PASSWORD, "Content-Type": "application/json" },
+      headers: { "x-admin-password": adminPassword, "Content-Type": "application/json" },
       body: JSON.stringify({ reason }),
     });
-    void fetchData();
+    void fetchData(adminPassword);
   };
 
   const releasePayout = async (id: number) => {
     await fetch(`/api/admin/purchases/${id}/release`, {
       method: "POST",
-      headers: { "x-admin-password": ADMIN_PASSWORD },
+      headers: { "x-admin-password": adminPassword },
     });
     alert("Payout released (placeholder — transfer logic to be wired next).");
   };
@@ -148,7 +153,9 @@ export default function Admin() {
                 autoFocus
               />
               {pwError && <p className="text-sm text-destructive">Access denied.</p>}
-              <Button type="submit" className="w-full">Enter</Button>
+              <Button type="submit" className="w-full" disabled={checkingPw}>
+                {checkingPw ? "Checking…" : "Enter"}
+              </Button>
             </form>
           </CardContent>
         </Card>
@@ -163,7 +170,7 @@ export default function Admin() {
     <div className="max-w-5xl mx-auto px-4 py-8 space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Admin dashboard</h1>
-        <Button variant="outline" size="sm" onClick={() => void fetchData()} disabled={loading}>
+        <Button variant="outline" size="sm" onClick={() => void fetchData(adminPassword)} disabled={loading}>
           {loading ? "Refreshing…" : "Refresh"}
         </Button>
       </div>
