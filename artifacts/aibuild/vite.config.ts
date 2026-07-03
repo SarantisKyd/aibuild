@@ -1,6 +1,5 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
-import tailwindcss from "@tailwindcss/vite";
 import path from "path";
 
 function parsePort(rawPort: string | undefined): number | undefined {
@@ -34,7 +33,6 @@ export default defineConfig(async ({ command }) => {
     base: basePath,
     plugins: [
       react(),
-      tailwindcss(),
       ...(isReplitDev
         ? [
             await import("@replit/vite-plugin-runtime-error-modal").then(
