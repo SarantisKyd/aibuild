@@ -35,6 +35,7 @@ import {
 } from "@workspace/api-client-react";
 import type { Job, Bid } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { apiUrl } from "@/lib/api-url";
 
 function getStoredEmail(key: "clientEmail" | "builderEmail"): string {
   if (typeof window === "undefined") return "";
@@ -89,7 +90,7 @@ export default function JobDetailDialog({
     }
     const timeout = setTimeout(async () => {
       try {
-        const res = await fetch(`/api/builders/${encodeURIComponent(bidEmail.toLowerCase())}`);
+        const res = await fetch(apiUrl(`/api/builders/${encodeURIComponent(bidEmail.toLowerCase())}`));
         if (res.ok) {
           const data = await res.json();
           setIsVerifiedBuilder(!!data.verified);

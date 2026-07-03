@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useCreateJob, getListJobsQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { apiUrl } from "@/lib/api-url";
 
 const ALL_SKILLS = [
   "Python", "JavaScript", "Claude API", "OpenAI API", "Replit",
@@ -88,7 +89,7 @@ export default function PostJob() {
     if (!postedJobId) return;
     setFeaturePending(true);
     try {
-      const res = await fetch(`/api/jobs/${postedJobId}/feature`, { method: "POST" });
+      const res = await fetch(apiUrl(`/api/jobs/${postedJobId}/feature`), { method: "POST" });
       const data = await res.json();
       if (data.checkoutUrl) {
         window.location.href = data.checkoutUrl;

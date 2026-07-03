@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { apiUrl } from "@/lib/api-url";
 
 const TABS = ["Pending", "Approved", "Disputes", "Cancelled"] as const;
 type Tab = typeof TABS[number];
@@ -69,10 +70,10 @@ export default function Admin() {
   const fetchData = useCallback(async (pw: string) => {
     setLoading(true);
     const [tr, pr, dr, cr] = await Promise.all([
-      fetch("/api/admin/tools", { headers: { "x-admin-password": pw } }),
-      fetch("/api/admin/purchases", { headers: { "x-admin-password": pw } }),
-      fetch("/api/admin/disputed-jobs", { headers: { "x-admin-password": pw } }),
-      fetch("/api/admin/cancelled-jobs", { headers: { "x-admin-password": pw } }),
+      fetch(apiUrl("/api/admin/tools"), { headers: { "x-admin-password": pw } }),
+      fetch(apiUrl("/api/admin/purchases"), { headers: { "x-admin-password": pw } }),
+      fetch(apiUrl("/api/admin/disputed-jobs"), { headers: { "x-admin-password": pw } }),
+      fetch(apiUrl("/api/admin/cancelled-jobs"), { headers: { "x-admin-password": pw } }),
     ]);
     if (tr.ok) setTools(await tr.json() as Tool[]);
     if (pr.ok) setPurchases(await pr.json() as Purchase[]);
@@ -91,7 +92,7 @@ export default function Admin() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setCheckingPw(true);
-    const res = await fetch("/api/admin/tools", { headers: { "x-admin-password": pwInput } });
+    const res = await fetch(apiUrl("/api/admin/tools"), { headers: { "x-admin-password": pwInput } });
     setCheckingPw(false);
     if (res.ok) {
       setAdminPassword(pwInput);
@@ -103,7 +104,7 @@ export default function Admin() {
   };
 
   const approve = async (id: number) => {
-    await fetch(`/api/admin/tools/${id}/approve`, {
+    await fetch(apiUrl(`/api/admin/tools/${id}/approve`), {
       method: "POST",
       headers: { "x-admin-password": adminPassword },
     });
@@ -112,7 +113,7 @@ export default function Admin() {
 
   const reject = async (id: number) => {
     const reason = window.prompt("Rejection reason (optional):") ?? "";
-    await fetch(`/api/admin/tools/${id}/reject`, {
+    await fetch(apiUrl(`/api/admin/tools/${id}/reject`), {
       method: "POST",
       headers: { "x-admin-password": adminPassword, "Content-Type": "application/json" },
       body: JSON.stringify({ reason }),
@@ -121,7 +122,7 @@ export default function Admin() {
   };
 
   const releasePayout = async (id: number) => {
-    await fetch(`/api/admin/purchases/${id}/release`, {
+    await fetch(apiUrl(`/api/admin/purchases/${id}/release`), {
       method: "POST",
       headers: { "x-admin-password": adminPassword },
     });

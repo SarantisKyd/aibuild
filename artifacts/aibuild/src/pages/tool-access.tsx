@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { motion } from "framer-motion";
+import { apiUrl } from "@/lib/api-url";
 
 interface Tool {
   id: number;
@@ -27,7 +28,7 @@ export default function ToolAccess() {
       setLoading(false);
       return;
     }
-    fetch(`/api/tools/${toolId}`)
+    fetch(apiUrl(`/api/tools/${toolId}`))
       .then((r) => {
         if (!r.ok) throw new Error("Tool not found");
         return r.json() as Promise<Tool>;

@@ -4,6 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { apiUrl } from "@/lib/api-url";
 
 export default function BuilderPage() {
   const { toast } = useToast();
@@ -27,7 +28,7 @@ export default function BuilderPage() {
     if (!name.trim() || !email.trim()) return;
     setPending(true);
     try {
-      const res = await fetch("/api/builders", {
+      const res = await fetch(apiUrl("/api/builders"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

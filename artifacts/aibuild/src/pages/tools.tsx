@@ -12,6 +12,7 @@ import { useListTools } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { getListToolsQueryKey } from "@workspace/api-client-react";
 import { useToast } from "@/hooks/use-toast";
+import { apiUrl } from "@/lib/api-url";
 
 export default function Tools() {
   const { toast } = useToast();
@@ -43,7 +44,7 @@ export default function Tools() {
     if (!formBilling) return;
     setListPending(true);
     try {
-      const res = await fetch("/api/tools", {
+      const res = await fetch(apiUrl("/api/tools"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -74,7 +75,7 @@ export default function Tools() {
 
   const handleBuy = async (toolId: number, toolName: string) => {
     try {
-      const res = await fetch(`/api/tools/${toolId}/buy`, { method: "POST" });
+      const res = await fetch(apiUrl(`/api/tools/${toolId}/buy`), { method: "POST" });
       const data = await res.json();
       if (data.checkoutUrl) {
         window.location.href = data.checkoutUrl;
