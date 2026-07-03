@@ -18,6 +18,8 @@ tags:
     description: Tool marketplace operations
   - name: builders
     description: Builder profile and subscription operations
+  - name: admin
+    description: Admin operations
 paths:
   /healthz:
     get:
@@ -160,6 +162,31 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
 
   /jobs/{id}/bids:
+    get:
+      operationId: listJobBids
+      tags: [bids]
+      summary: List bids for a job
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of bids
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Bid"
+        "404":
+          description: Job not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
     post:
       operationId: submitBid
       tags: [bids]
@@ -195,6 +222,181 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+
+  /jobs/{id}/bids/{bidId}/accept:
+    post:
+      operationId: acceptBid
+      tags: [bids]
+      summary: Accept a bid on a job, rejecting all others
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: bidId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Updated job
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Job"
+        "404":
+          description: Job or bid not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /jobs/{id}/deliver:
+    post:
+      operationId: deliverJob
+      tags: [jobs]
+      summary: Submit completed work for a job
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeliverJobBody"
+      responses:
+        "200":
+          description: Updated job
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Job"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Job not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /jobs/{id}/release:
+    post:
+      operationId: releaseJobPayment
+      tags: [jobs]
+      summary: Approve delivered work and release payment to the builder via Stripe Transfer
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Payment released
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReleaseResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Job not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /jobs/{id}/revision:
+    post:
+      operationId: requestRevision
+      tags: [jobs]
+      summary: Request a revision on delivered work
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RevisionBody"
+      responses:
+        "200":
+          description: Updated job
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Job"
+        "404":
+          description: Job not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /jobs/{id}/dispute:
+    post:
+      operationId: disputeJob
+      tags: [jobs]
+      summary: Open a dispute on a delivered job
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DisputeBody"
+      responses:
+        "200":
+          description: Updated job
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Job"
+        "404":
+          description: Job not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /admin/disputed-jobs:
+    get:
+      operationId: listDisputedJobs
+      tags: [admin]
+      summary: List all jobs currently under dispute
+      responses:
+        "200":
+          description: List of disputed jobs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Job"
 
   /builders/{email}:
     get:
@@ -319,6 +521,26 @@ components:
       required:
         - status
 
+    AcceptedBid:
+      type: object
+      properties:
+        id:
+          type: integer
+        price:
+          type: integer
+        deliveryTime:
+          type: string
+        coverNote:
+          type: string
+        builderEmail:
+          type: string
+      required:
+        - id
+        - price
+        - deliveryTime
+        - coverNote
+        - builderEmail
+
     Job:
       type: object
       properties:
@@ -348,6 +570,23 @@ components:
           type: boolean
         status:
           type: string
+        clientEmail:
+          type: string
+        acceptedBid:
+          $ref: "#/components/schemas/AcceptedBid"
+          nullable: true
+        deliveryNote:
+          type: string
+          nullable: true
+        deliveryLink:
+          type: string
+          nullable: true
+        revisionNote:
+          type: string
+          nullable: true
+        disputeReason:
+          type: string
+          nullable: true
         createdAt:
           type: string
           format: date-time
@@ -364,6 +603,7 @@ components:
         - bids
         - featured
         - status
+        - clientEmail
         - createdAt
 
     CreateJobResponse:
@@ -410,6 +650,9 @@ components:
           type: boolean
         isNew:
           type: boolean
+        clientEmail:
+          type: string
+          format: email
       required:
         - title
         - description
@@ -417,6 +660,7 @@ components:
         - deadline
         - category
         - skills
+        - clientEmail
 
     Bid:
       type: object
@@ -431,6 +675,10 @@ components:
           type: string
         coverNote:
           type: string
+        builderEmail:
+          type: string
+        status:
+          type: string
         createdAt:
           type: string
           format: date-time
@@ -440,6 +688,8 @@ components:
         - price
         - deliveryTime
         - coverNote
+        - builderEmail
+        - status
         - createdAt
 
     CreateBidBody:
@@ -453,10 +703,63 @@ components:
         coverNote:
           type: string
           minLength: 10
+        builderEmail:
+          type: string
+          format: email
       required:
         - price
         - deliveryTime
         - coverNote
+        - builderEmail
+
+    DeliverJobBody:
+      type: object
+      properties:
+        builderEmail:
+          type: string
+          format: email
+        deliveryNote:
+          type: string
+          minLength: 1
+        deliveryLink:
+          type: string
+          minLength: 1
+      required:
+        - builderEmail
+        - deliveryNote
+        - deliveryLink
+
+    ReleaseResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        builderPaid:
+          type: number
+        platformFee:
+          type: number
+      required:
+        - success
+        - builderPaid
+        - platformFee
+
+    RevisionBody:
+      type: object
+      properties:
+        revisionNote:
+          type: string
+          minLength: 1
+      required:
+        - revisionNote
+
+    DisputeBody:
+      type: object
+      properties:
+        reason:
+          type: string
+          minLength: 1
+      required:
+        - reason
 
     Tool:
       type: object

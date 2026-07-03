@@ -9,6 +9,14 @@ export interface HealthStatus {
   status: string;
 }
 
+export interface AcceptedBid {
+  id: number;
+  price: number;
+  deliveryTime: string;
+  coverNote: string;
+  builderEmail: string;
+}
+
 export interface Job {
   id: number;
   title: string;
@@ -22,6 +30,12 @@ export interface Job {
   bids: number;
   featured: boolean;
   status: string;
+  clientEmail: string;
+  acceptedBid?: AcceptedBid | null;
+  deliveryNote?: string | null;
+  deliveryLink?: string | null;
+  revisionNote?: string | null;
+  disputeReason?: string | null;
   createdAt: string;
 }
 
@@ -56,6 +70,7 @@ export interface CreateJobBody {
   skills: string[];
   urgent?: boolean;
   isNew?: boolean;
+  clientEmail: string;
 }
 
 export interface Bid {
@@ -64,6 +79,8 @@ export interface Bid {
   price: number;
   deliveryTime: string;
   coverNote: string;
+  builderEmail: string;
+  status: string;
   createdAt: string;
 }
 
@@ -73,6 +90,31 @@ export interface CreateBidBody {
   deliveryTime: string;
   /** @minLength 10 */
   coverNote: string;
+  builderEmail: string;
+}
+
+export interface DeliverJobBody {
+  builderEmail: string;
+  /** @minLength 1 */
+  deliveryNote: string;
+  /** @minLength 1 */
+  deliveryLink: string;
+}
+
+export interface ReleaseResponse {
+  success: boolean;
+  builderPaid: number;
+  platformFee: number;
+}
+
+export interface RevisionBody {
+  /** @minLength 1 */
+  revisionNote: string;
+}
+
+export interface DisputeBody {
+  /** @minLength 1 */
+  reason: string;
 }
 
 export interface Tool {

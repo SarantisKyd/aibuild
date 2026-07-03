@@ -67,6 +67,7 @@ export default function PostJob() {
       toast({ title: "Missing fields", description: "Please fill out all required fields.", variant: "destructive" });
       return;
     }
+    localStorage.setItem("clientEmail", email.trim().toLowerCase());
     createJobMutation.mutate({
       data: {
         title: title.trim(),
@@ -77,6 +78,7 @@ export default function PostJob() {
         skills: selectedSkills,
         urgent: false,
         isNew: true,
+        clientEmail: email.trim().toLowerCase(),
       },
     });
   };

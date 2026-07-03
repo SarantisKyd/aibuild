@@ -1,0 +1,27 @@
+Add a job cancellation and refund flow. Here is exactly what I need:
+1. Cancel button on job detail
+On the job detail page, if the viewer is the client (matched by localStorage clientEmail) and job.status is either 'funded' or 'in_progress' with no accepted bid yet, show a "Cancel job & get refund" button in red at the bottom of the page, below all other content.
+If job.status is 'in_progress' and a builder HAS been accepted (job.acceptedBid exists), show a greyed out "Cancel job" button with a tooltip: "A builder is already working on this — open a dispute instead." Clicking it opens the dispute flow instead of cancelling.
+2. Refund route
+In server.js add POST /api/jobs/:id/cancel. It should:
+
+Check job.status — only allow cancel if status is 'funded' and job.acceptedBid does not exist
+If allowed: create a Stripe refund using the job's stripeSessionId. Use stripe.refunds.create({ payment_intent: paymentIntentId }) — get the paymentIntentId from the Stripe session by looking up the session with stripe.checkout.sessions.retrieve(job.stripeSessionId)
+Set job.status to 'cancelled' and job.cancelledAt to Date.now()
+Return { success: true, refundAmount: job.budget }
+If not allowed (builder already accepted): return { error: 'Cannot cancel — builder already accepted. Open a dispute instead.' } with status 400
+
+3. Cancel confirmation UI
+When the client clicks "Cancel job & get refund", show a confirmation modal before doing anything:
+
+Headline: "Cancel this job?"
+Body: "Your $[budget] will be refunded to your original payment method within 5-10 business days. This cannot be undone."
+Two buttons: "Yes, cancel and refund" (red) and "Keep job live" (grey outline)
+Only call POST /api/jobs/:id/cancel if they confirm
+
+4. After cancellation
+On success show: "✅ Job cancelled. Your $[budget] refund is on its way — allow 5-10 business days."
+Remove the job from the public job board immediately by checking status !== 'cancelled' in GET /api/jobs.
+5. Admin visibility
+In the admin panel add cancelled jobs to a new "Cancelled" tab showing the job title, budget, client email, and cancellation date.
+Do not change anything else.

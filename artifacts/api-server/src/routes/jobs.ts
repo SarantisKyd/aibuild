@@ -1,9 +1,10 @@
 import { Router, type IRouter } from "express";
 import { db } from "@workspace/db";
-import { jobsTable, bidsTable, insertJobSchema, insertBidSchema } from "@workspace/db";
-import { eq, desc, sql } from "drizzle-orm";
-import { ListJobsResponse, CreateJobBody, SubmitBidBody } from "@workspace/api-zod";
+import { jobsTable, bidsTable, buildersTable, insertJobSchema, insertBidSchema } from "@workspace/db";
+import { eq, and, ne, desc } from "drizzle-orm";
+import { ListJobsResponse, CreateJobBody, SubmitBidBody, DeliverJobBody, RequestRevisionBody, DisputeJobBody } from "@workspace/api-zod";
 import { getUncachableStripeClient } from "../stripeClient";
+import { logger } from "../lib/logger";
 
 const router: IRouter = Router();
 
@@ -102,6 +103,21 @@ router.get("/jobs/:id", async (req, res) => {
   res.json(job);
 });
 
+router.get("/jobs/:id/bids", async (req, res) => {
+  const jobId = Number(req.params.id);
+  if (isNaN(jobId)) {
+    res.status(400).json({ error: "Invalid job id" });
+    return;
+  }
+  const [job] = await db.select().from(jobsTable).where(eq(jobsTable.id, jobId));
+  if (!job) {
+    res.status(404).json({ error: "Job not found" });
+    return;
+  }
+  const bids = await db.select().from(bidsTable).where(eq(bidsTable.jobId, jobId));
+  res.json(bids);
+});
+
 router.post("/jobs/:id/bids", async (req, res) => {
   const jobId = Number(req.params.id);
   if (isNaN(jobId)) {
@@ -118,13 +134,198 @@ router.post("/jobs/:id/bids", async (req, res) => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
-  const validated = insertBidSchema.parse({ ...parsed.data, jobId });
+  const validated = insertBidSchema.parse({
+    ...parsed.data,
+    builderEmail: parsed.data.builderEmail.toLowerCase(),
+    jobId,
+  });
   const [bid] = await db.insert(bidsTable).values(validated).returning();
   await db
     .update(jobsTable)
     .set({ bids: job.bids + 1 })
     .where(eq(jobsTable.id, jobId));
   res.status(201).json(bid);
+});
+
+router.post("/jobs/:id/bids/:bidId/accept", async (req, res) => {
+  const jobId = Number(req.params.id);
+  const bidId = Number(req.params.bidId);
+  if (isNaN(jobId) || isNaN(bidId)) {
+    res.status(400).json({ error: "Invalid job or bid id" });
+    return;
+  }
+  const [job] = await db.select().from(jobsTable).where(eq(jobsTable.id, jobId));
+  if (!job) {
+    res.status(404).json({ error: "Job not found" });
+    return;
+  }
+  const [bid] = await db
+    .select()
+    .from(bidsTable)
+    .where(and(eq(bidsTable.id, bidId), eq(bidsTable.jobId, jobId)));
+  if (!bid) {
+    res.status(404).json({ error: "Bid not found" });
+    return;
+  }
+
+  await db.update(bidsTable).set({ status: "accepted" }).where(eq(bidsTable.id, bidId));
+  await db
+    .update(bidsTable)
+    .set({ status: "rejected" })
+    .where(and(eq(bidsTable.jobId, jobId), ne(bidsTable.id, bidId)));
+
+  const [updatedJob] = await db
+    .update(jobsTable)
+    .set({
+      status: "in_progress",
+      acceptedBid: {
+        id: bid.id,
+        price: bid.price,
+        deliveryTime: bid.deliveryTime,
+        coverNote: bid.coverNote,
+        builderEmail: bid.builderEmail,
+      },
+    })
+    .where(eq(jobsTable.id, jobId))
+    .returning();
+
+  logger.info({ jobId, bidId }, "Bid accepted");
+  res.json(updatedJob);
+});
+
+router.post("/jobs/:id/deliver", async (req, res) => {
+  const jobId = Number(req.params.id);
+  if (isNaN(jobId)) {
+    res.status(400).json({ error: "Invalid job id" });
+    return;
+  }
+  const [job] = await db.select().from(jobsTable).where(eq(jobsTable.id, jobId));
+  if (!job) {
+    res.status(404).json({ error: "Job not found" });
+    return;
+  }
+  const parsed = DeliverJobBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+  const { builderEmail, deliveryNote, deliveryLink } = parsed.data;
+  if (!job.acceptedBid || job.acceptedBid.builderEmail.toLowerCase() !== builderEmail.toLowerCase()) {
+    res.status(403).json({ error: "Only the accepted builder can submit work for this job" });
+    return;
+  }
+
+  const [updatedJob] = await db
+    .update(jobsTable)
+    .set({ status: "delivered", deliveryNote, deliveryLink })
+    .where(eq(jobsTable.id, jobId))
+    .returning();
+
+  logger.info({ jobId }, "Work delivered");
+  res.json(updatedJob);
+});
+
+router.post("/jobs/:id/release", async (req, res) => {
+  const jobId = Number(req.params.id);
+  if (isNaN(jobId)) {
+    res.status(400).json({ error: "Invalid job id" });
+    return;
+  }
+  const [job] = await db.select().from(jobsTable).where(eq(jobsTable.id, jobId));
+  if (!job) {
+    res.status(404).json({ error: "Job not found" });
+    return;
+  }
+  if (!job.acceptedBid) {
+    res.status(400).json({ error: "This job has no accepted bid" });
+    return;
+  }
+
+  const [builder] = await db
+    .select()
+    .from(buildersTable)
+    .where(eq(buildersTable.email, job.acceptedBid.builderEmail.toLowerCase()));
+  if (!builder || !builder.stripeAccountId) {
+    res.status(400).json({ error: "Builder does not have a connected Stripe account" });
+    return;
+  }
+
+  const builderPaid = Math.round(job.budget * 0.85);
+  const platformFee = job.budget - builderPaid;
+
+  try {
+    const stripe = await getUncachableStripeClient();
+    await stripe.transfers.create({
+      amount: builderPaid * 100,
+      currency: "usd",
+      destination: builder.stripeAccountId,
+      metadata: { jobId: String(jobId), type: "job_payout" },
+    });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    logger.error({ jobId, err: msg }, "Stripe transfer failed");
+    res.status(500).json({ error: msg });
+    return;
+  }
+
+  await db.update(jobsTable).set({ status: "complete" }).where(eq(jobsTable.id, jobId));
+
+  logger.info({ jobId, builderPaid, platformFee }, "Payment released");
+  res.json({ success: true, builderPaid, platformFee });
+});
+
+router.post("/jobs/:id/revision", async (req, res) => {
+  const jobId = Number(req.params.id);
+  if (isNaN(jobId)) {
+    res.status(400).json({ error: "Invalid job id" });
+    return;
+  }
+  const [job] = await db.select().from(jobsTable).where(eq(jobsTable.id, jobId));
+  if (!job) {
+    res.status(404).json({ error: "Job not found" });
+    return;
+  }
+  const parsed = RequestRevisionBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+
+  const [updatedJob] = await db
+    .update(jobsTable)
+    .set({ status: "in_progress", revisionNote: parsed.data.revisionNote })
+    .where(eq(jobsTable.id, jobId))
+    .returning();
+
+  logger.info({ jobId }, "Revision requested");
+  res.json(updatedJob);
+});
+
+router.post("/jobs/:id/dispute", async (req, res) => {
+  const jobId = Number(req.params.id);
+  if (isNaN(jobId)) {
+    res.status(400).json({ error: "Invalid job id" });
+    return;
+  }
+  const [job] = await db.select().from(jobsTable).where(eq(jobsTable.id, jobId));
+  if (!job) {
+    res.status(404).json({ error: "Job not found" });
+    return;
+  }
+  const parsed = DisputeJobBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+
+  const [updatedJob] = await db
+    .update(jobsTable)
+    .set({ status: "disputed", disputeReason: parsed.data.reason })
+    .where(eq(jobsTable.id, jobId))
+    .returning();
+
+  logger.info({ jobId }, "Dispute opened");
+  res.json(updatedJob);
 });
 
 router.post("/jobs/:id/feature", async (req, res) => {

@@ -37,6 +37,18 @@ export const ListJobsResponseItem = zod.object({
   "bids": zod.number(),
   "featured": zod.boolean(),
   "status": zod.string(),
+  "clientEmail": zod.string(),
+  "acceptedBid": zod.object({
+  "id": zod.number(),
+  "price": zod.number(),
+  "deliveryTime": zod.string(),
+  "coverNote": zod.string(),
+  "builderEmail": zod.string()
+}).nullish(),
+  "deliveryNote": zod.string().nullish(),
+  "deliveryLink": zod.string().nullish(),
+  "revisionNote": zod.string().nullish(),
+  "disputeReason": zod.string().nullish(),
   "createdAt": zod.coerce.date()
 })
 export const ListJobsResponse = zod.array(ListJobsResponseItem)
@@ -61,7 +73,8 @@ export const CreateJobBody = zod.object({
   "category": zod.enum(['web', 'automation', 'agent', 'data']),
   "skills": zod.array(zod.string()),
   "urgent": zod.boolean().optional(),
-  "isNew": zod.boolean().optional()
+  "isNew": zod.boolean().optional(),
+  "clientEmail": zod.string().email()
 })
 
 export const CreateJobResponse = zod.object({
@@ -78,6 +91,18 @@ export const CreateJobResponse = zod.object({
   "bids": zod.number(),
   "featured": zod.boolean(),
   "status": zod.string(),
+  "clientEmail": zod.string(),
+  "acceptedBid": zod.object({
+  "id": zod.number(),
+  "price": zod.number(),
+  "deliveryTime": zod.string(),
+  "coverNote": zod.string(),
+  "builderEmail": zod.string()
+}).nullish(),
+  "deliveryNote": zod.string().nullish(),
+  "deliveryLink": zod.string().nullish(),
+  "revisionNote": zod.string().nullish(),
+  "disputeReason": zod.string().nullish(),
   "createdAt": zod.coerce.date()
 }),
   "checkoutUrl": zod.string().nullish()
@@ -116,6 +141,18 @@ export const GetJobResponse = zod.object({
   "bids": zod.number(),
   "featured": zod.boolean(),
   "status": zod.string(),
+  "clientEmail": zod.string(),
+  "acceptedBid": zod.object({
+  "id": zod.number(),
+  "price": zod.number(),
+  "deliveryTime": zod.string(),
+  "coverNote": zod.string(),
+  "builderEmail": zod.string()
+}).nullish(),
+  "deliveryNote": zod.string().nullish(),
+  "deliveryLink": zod.string().nullish(),
+  "revisionNote": zod.string().nullish(),
+  "disputeReason": zod.string().nullish(),
   "createdAt": zod.coerce.date()
 })
 
@@ -133,6 +170,26 @@ export const FeatureJobResponse = zod.object({
 
 
 /**
+ * @summary List bids for a job
+ */
+export const ListJobBidsParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const ListJobBidsResponseItem = zod.object({
+  "id": zod.number(),
+  "jobId": zod.number(),
+  "price": zod.number(),
+  "deliveryTime": zod.string(),
+  "coverNote": zod.string(),
+  "builderEmail": zod.string(),
+  "status": zod.string(),
+  "createdAt": zod.coerce.date()
+})
+export const ListJobBidsResponse = zod.array(ListJobBidsResponseItem)
+
+
+/**
  * @summary Submit a bid on a job
  */
 export const SubmitBidParams = zod.object({
@@ -147,7 +204,8 @@ export const submitBidBodyCoverNoteMin = 10;
 export const SubmitBidBody = zod.object({
   "price": zod.number().min(1),
   "deliveryTime": zod.string(),
-  "coverNote": zod.string().min(submitBidBodyCoverNoteMin)
+  "coverNote": zod.string().min(submitBidBodyCoverNoteMin),
+  "builderEmail": zod.string().email()
 })
 
 export const SubmitBidResponse = zod.object({
@@ -156,8 +214,226 @@ export const SubmitBidResponse = zod.object({
   "price": zod.number(),
   "deliveryTime": zod.string(),
   "coverNote": zod.string(),
+  "builderEmail": zod.string(),
+  "status": zod.string(),
   "createdAt": zod.coerce.date()
 })
+
+
+/**
+ * @summary Accept a bid on a job, rejecting all others
+ */
+export const AcceptBidParams = zod.object({
+  "id": zod.coerce.number(),
+  "bidId": zod.coerce.number()
+})
+
+export const AcceptBidResponse = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "budget": zod.number(),
+  "deadline": zod.string(),
+  "category": zod.string(),
+  "skills": zod.array(zod.string()),
+  "urgent": zod.boolean(),
+  "isNew": zod.boolean(),
+  "bids": zod.number(),
+  "featured": zod.boolean(),
+  "status": zod.string(),
+  "clientEmail": zod.string(),
+  "acceptedBid": zod.object({
+  "id": zod.number(),
+  "price": zod.number(),
+  "deliveryTime": zod.string(),
+  "coverNote": zod.string(),
+  "builderEmail": zod.string()
+}).nullish(),
+  "deliveryNote": zod.string().nullish(),
+  "deliveryLink": zod.string().nullish(),
+  "revisionNote": zod.string().nullish(),
+  "disputeReason": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Submit completed work for a job
+ */
+export const DeliverJobParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+
+
+
+export const DeliverJobBody = zod.object({
+  "builderEmail": zod.string().email(),
+  "deliveryNote": zod.string().min(1),
+  "deliveryLink": zod.string().min(1)
+})
+
+export const DeliverJobResponse = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "budget": zod.number(),
+  "deadline": zod.string(),
+  "category": zod.string(),
+  "skills": zod.array(zod.string()),
+  "urgent": zod.boolean(),
+  "isNew": zod.boolean(),
+  "bids": zod.number(),
+  "featured": zod.boolean(),
+  "status": zod.string(),
+  "clientEmail": zod.string(),
+  "acceptedBid": zod.object({
+  "id": zod.number(),
+  "price": zod.number(),
+  "deliveryTime": zod.string(),
+  "coverNote": zod.string(),
+  "builderEmail": zod.string()
+}).nullish(),
+  "deliveryNote": zod.string().nullish(),
+  "deliveryLink": zod.string().nullish(),
+  "revisionNote": zod.string().nullish(),
+  "disputeReason": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Approve delivered work and release payment to the builder via Stripe Transfer
+ */
+export const ReleaseJobPaymentParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const ReleaseJobPaymentResponse = zod.object({
+  "success": zod.boolean(),
+  "builderPaid": zod.number(),
+  "platformFee": zod.number()
+})
+
+
+/**
+ * @summary Request a revision on delivered work
+ */
+export const RequestRevisionParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+
+
+export const RequestRevisionBody = zod.object({
+  "revisionNote": zod.string().min(1)
+})
+
+export const RequestRevisionResponse = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "budget": zod.number(),
+  "deadline": zod.string(),
+  "category": zod.string(),
+  "skills": zod.array(zod.string()),
+  "urgent": zod.boolean(),
+  "isNew": zod.boolean(),
+  "bids": zod.number(),
+  "featured": zod.boolean(),
+  "status": zod.string(),
+  "clientEmail": zod.string(),
+  "acceptedBid": zod.object({
+  "id": zod.number(),
+  "price": zod.number(),
+  "deliveryTime": zod.string(),
+  "coverNote": zod.string(),
+  "builderEmail": zod.string()
+}).nullish(),
+  "deliveryNote": zod.string().nullish(),
+  "deliveryLink": zod.string().nullish(),
+  "revisionNote": zod.string().nullish(),
+  "disputeReason": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Open a dispute on a delivered job
+ */
+export const DisputeJobParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+
+
+export const DisputeJobBody = zod.object({
+  "reason": zod.string().min(1)
+})
+
+export const DisputeJobResponse = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "budget": zod.number(),
+  "deadline": zod.string(),
+  "category": zod.string(),
+  "skills": zod.array(zod.string()),
+  "urgent": zod.boolean(),
+  "isNew": zod.boolean(),
+  "bids": zod.number(),
+  "featured": zod.boolean(),
+  "status": zod.string(),
+  "clientEmail": zod.string(),
+  "acceptedBid": zod.object({
+  "id": zod.number(),
+  "price": zod.number(),
+  "deliveryTime": zod.string(),
+  "coverNote": zod.string(),
+  "builderEmail": zod.string()
+}).nullish(),
+  "deliveryNote": zod.string().nullish(),
+  "deliveryLink": zod.string().nullish(),
+  "revisionNote": zod.string().nullish(),
+  "disputeReason": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary List all jobs currently under dispute
+ */
+export const ListDisputedJobsResponseItem = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "budget": zod.number(),
+  "deadline": zod.string(),
+  "category": zod.string(),
+  "skills": zod.array(zod.string()),
+  "urgent": zod.boolean(),
+  "isNew": zod.boolean(),
+  "bids": zod.number(),
+  "featured": zod.boolean(),
+  "status": zod.string(),
+  "clientEmail": zod.string(),
+  "acceptedBid": zod.object({
+  "id": zod.number(),
+  "price": zod.number(),
+  "deliveryTime": zod.string(),
+  "coverNote": zod.string(),
+  "builderEmail": zod.string()
+}).nullish(),
+  "deliveryNote": zod.string().nullish(),
+  "deliveryLink": zod.string().nullish(),
+  "revisionNote": zod.string().nullish(),
+  "disputeReason": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+})
+export const ListDisputedJobsResponse = zod.array(ListDisputedJobsResponseItem)
 
 
 /**

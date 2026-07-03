@@ -9,12 +9,15 @@ export const bidsTable = pgTable("bids", {
   price: integer("price").notNull(),
   deliveryTime: text("delivery_time").notNull(),
   coverNote: text("cover_note").notNull(),
+  builderEmail: text("builder_email").notNull().default(""),
+  status: text("status").notNull().default("pending"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
 export const insertBidSchema = createInsertSchema(bidsTable).omit({
   id: true,
   createdAt: true,
+  status: true,
 });
 export type InsertBid = z.infer<typeof insertBidSchema>;
 export type Bid = typeof bidsTable.$inferSelect;

@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { db } from "@workspace/db";
-import { toolsTable, purchasesTable } from "@workspace/db";
+import { toolsTable, purchasesTable, jobsTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { logger } from "../lib/logger";
 
@@ -50,6 +50,12 @@ router.post("/admin/tools/:id/reject", async (req, res) => {
   if (!tool) { res.status(404).json({ error: "Tool not found" }); return; }
   logger.info({ toolId: id, reason }, "Tool rejected");
   res.json(tool);
+});
+
+router.get("/admin/disputed-jobs", async (req, res) => {
+  if (!checkAdminPassword(req, res)) return;
+  const jobs = await db.select().from(jobsTable).where(eq(jobsTable.status, "disputed"));
+  res.json(jobs);
 });
 
 router.get("/admin/purchases", async (req, res) => {

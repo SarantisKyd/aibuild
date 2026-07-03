@@ -1,0 +1,17 @@
+Build the complete job completion and payment release flow. Here is exactly what I need:
+1. Accept a bid
+In server.js add POST /api/jobs/:id/bids/:bidId/accept — sets job.status to 'in_progress', stores job.acceptedBid (the full bid object including builderEmail and price), and sets all other bids status to 'rejected'. Returns the updated job.
+On the job detail modal in the frontend, if the viewer is the client (match by email stored in localStorage from when they posted), show an "Accept bid" button next to each bid. Clicking it calls the accept route and updates the UI to show "Builder selected — work in progress."
+2. Submit work
+Add POST /api/jobs/:id/deliver — sets job.status to 'delivered', stores job.deliveryNote and job.deliveryLink. Requires the builder's email to match job.acceptedBid.builderEmail.
+On the job detail page, if job.status is 'in_progress' and the viewer is the accepted builder (match by email in localStorage), show a "Submit your work" form with two fields: delivery note (textarea) and work link (text input, placeholder "Link to your work — Replit URL, GitHub, Google Drive, etc."). And a "Submit work" button that calls the deliver route.
+3. Approve and release payment
+Add POST /api/jobs/:id/release — looks up job.acceptedBid.builderEmail, finds the builder in the database, gets their stripeAccountId, calculates 85% of job.budget, creates a Stripe Transfer to the builder's stripeAccountId, sets job.status to 'complete'. Returns { success, builderPaid, platformFee }.
+On the job detail page, if job.status is 'delivered' and the viewer is the client, show the delivery note and work link clearly, then two buttons: "Approve & release payment" (green) and "Request revision" (grey outline).
+Clicking "Approve & release payment" calls POST /api/jobs/:id/release and shows a success screen: "✅ Payment released! [builder name] has been paid $[amount]. Thank you for using AIBuild."
+Clicking "Request revision" shows a textarea asking what needs to change, submits to POST /api/jobs/:id/revision which stores the revision note and sets job.status back to 'in_progress'.
+4. Dispute button
+On the job detail page when status is 'delivered', add a small "Something wrong? Open a dispute" text link below the two main buttons. Clicking it calls POST /api/jobs/:id/dispute which sets job.status to 'disputed' and stores the reason. In the admin panel disputes tab, show disputed jobs with the delivery link, delivery note, client email, and builder email so you can resolve manually.
+5. Builder and client identity
+When a client posts a job, store their email in localStorage as 'clientEmail'. When a builder signs up, store their email in localStorage as 'builderEmail'. Use these to show the right buttons to the right person on the job detail page.
+Do not change the homepage, job board cards, or any existing styles.

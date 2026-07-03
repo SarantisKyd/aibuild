@@ -33,6 +33,18 @@ interface Purchase {
   status: string;
 }
 
+interface DisputedJob {
+  id: number;
+  title: string;
+  budget: number;
+  clientEmail: string;
+  acceptedBid?: { builderEmail: string; price: number } | null;
+  deliveryNote: string | null;
+  deliveryLink: string | null;
+  disputeReason: string | null;
+  status: string;
+}
+
 export default function Admin() {
   const [authed, setAuthed] = useState(false);
   const [pwInput, setPwInput] = useState("");
@@ -40,17 +52,20 @@ export default function Admin() {
   const [tab, setTab] = useState<Tab>("Pending");
   const [tools, setTools] = useState<Tool[]>([]);
   const [purchases, setPurchases] = useState<Purchase[]>([]);
+  const [disputedJobs, setDisputedJobs] = useState<DisputedJob[]>([]);
   const [loading, setLoading] = useState(false);
   const [, setTick] = useState(0);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
-    const [tr, pr] = await Promise.all([
+    const [tr, pr, dr] = await Promise.all([
       fetch("/api/admin/tools", { headers: { "x-admin-password": ADMIN_PASSWORD } }),
       fetch("/api/admin/purchases", { headers: { "x-admin-password": ADMIN_PASSWORD } }),
+      fetch("/api/admin/disputed-jobs", { headers: { "x-admin-password": ADMIN_PASSWORD } }),
     ]);
     if (tr.ok) setTools(await tr.json() as Tool[]);
     if (pr.ok) setPurchases(await pr.json() as Purchase[]);
+    if (dr.ok) setDisputedJobs(await dr.json() as DisputedJob[]);
     setLoading(false);
   }, []);
 
@@ -159,9 +174,9 @@ export default function Admin() {
                 {pending.length}
               </span>
             )}
-            {t === "Disputes" && purchases.length > 0 && (
+            {t === "Disputes" && (purchases.length > 0 || disputedJobs.length > 0) && (
               <span className="ml-1.5 bg-blue-100 text-blue-700 text-xs rounded-full px-1.5 py-0.5">
-                {purchases.length}
+                {purchases.length + disputedJobs.length}
               </span>
             )}
           </button>
@@ -191,11 +206,52 @@ export default function Admin() {
       )}
 
       {tab === "Disputes" && (
-        <div className="space-y-4">
-          {purchases.length === 0 && (
-            <p className="text-muted-foreground text-sm">No purchases recorded yet.</p>
-          )}
-          {purchases.map((p) => (
+        <div className="space-y-6">
+          <div className="space-y-4">
+            <h2 className="text-lg font-semibold">Disputed jobs</h2>
+            {disputedJobs.length === 0 && (
+              <p className="text-muted-foreground text-sm">No disputed jobs.</p>
+            )}
+            {disputedJobs.map((job) => (
+              <Card key={job.id}>
+                <CardContent className="pt-4 space-y-2 text-sm">
+                  <div className="flex items-center gap-2">
+                    <p className="font-semibold text-base">{job.title}</p>
+                    <Badge variant="destructive">Disputed</Badge>
+                  </div>
+                  <p><span className="font-medium">Budget:</span> ${job.budget}</p>
+                  <p><span className="font-medium">Client:</span> {job.clientEmail}</p>
+                  <p><span className="font-medium">Builder:</span> {job.acceptedBid?.builderEmail ?? "—"}</p>
+                  {job.disputeReason && (
+                    <p><span className="font-medium">Dispute reason:</span> {job.disputeReason}</p>
+                  )}
+                  {job.deliveryNote && (
+                    <p><span className="font-medium">Delivery note:</span> {job.deliveryNote}</p>
+                  )}
+                  {job.deliveryLink && (
+                    <p>
+                      <span className="font-medium">Delivery link:</span>{" "}
+                      <a
+                        href={job.deliveryLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primary underline break-all"
+                      >
+                        {job.deliveryLink}
+                      </a>
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          <div className="space-y-4">
+            <h2 className="text-lg font-semibold">Tool purchases</h2>
+            {purchases.length === 0 && (
+              <p className="text-muted-foreground text-sm">No purchases recorded yet.</p>
+            )}
+            {purchases.map((p) => (
             <Card key={p.id}>
               <CardContent className="pt-4 space-y-2">
                 <div className="flex items-start justify-between gap-4">
@@ -223,7 +279,8 @@ export default function Admin() {
                 </div>
               </CardContent>
             </Card>
-          ))}
+            ))}
+          </div>
         </div>
       )}
     </div>

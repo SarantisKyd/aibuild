@@ -38,6 +38,7 @@ export default function BuilderPage() {
       });
       const data = await res.json();
       if (data.onboardingUrl) {
+        localStorage.setItem("builderEmail", email.trim().toLowerCase());
         window.location.href = data.onboardingUrl;
       } else {
         toast({
