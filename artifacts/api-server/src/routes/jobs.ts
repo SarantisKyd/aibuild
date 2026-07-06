@@ -28,6 +28,7 @@ router.get("/jobs", async (req, res) => {
 });
 
 async function createFundCheckout(job: { id: number; title: string; budget: number }, origin: string): Promise<string | null> {
+  logger.info({ jobId: job.id }, "[createFundCheckout] attempting Stripe checkout session creation");
   try {
     const stripe = await getUncachableStripeClient();
     const appUrl = process.env.APP_URL?.replace(/\/$/, "") ?? origin;
@@ -52,30 +53,43 @@ async function createFundCheckout(job: { id: number; title: string; budget: numb
       metadata: { jobId: String(job.id), type: "escrow_fund" },
     });
     await db.update(jobsTable).set({ stripeSessionId: session.id }).where(eq(jobsTable.id, job.id));
+    logger.info({ jobId: job.id, sessionId: session.id }, "[createFundCheckout] Stripe checkout session created");
     return session.url;
   } catch (err) {
-    console.error("Stripe error:", err instanceof Error ? err.message : String(err));
+    logger.error(
+      { jobId: job.id, err: err instanceof Error ? { message: err.message, stack: err.stack } : String(err) },
+      "[createFundCheckout] Stripe checkout session creation FAILED — job will be saved without a payment link"
+    );
     return null;
   }
 }
 
 router.post("/jobs", async (req, res) => {
-  console.log("[POST /api/jobs] request body:", JSON.stringify(req.body, null, 2));
+  req.log.info({ body: req.body }, "[POST /api/jobs] request received");
   const parsed = CreateJobBody.safeParse(req.body);
   if (!parsed.success) {
-    console.log("[POST /api/jobs] validation error:", parsed.error.message);
+    req.log.warn({ error: parsed.error.message }, "[POST /api/jobs] validation error");
     res.status(400).json({ error: parsed.error.message });
     return;
   }
   try {
     const validated = insertJobSchema.parse({ ...parsed.data, isNew: true });
     const [job] = await db.insert(jobsTable).values(validated).returning();
-    console.log("[POST /api/jobs] job created:", JSON.stringify(job, null, 2));
+    req.log.info({ jobId: job.id }, "[POST /api/jobs] job created, now attempting Stripe checkout");
     const origin = req.headers.origin ?? `https://${req.headers.host}`;
     const checkoutUrl = await createFundCheckout(job, origin);
+    if (!checkoutUrl) {
+      req.log.error(
+        { jobId: job.id },
+        "[POST /api/jobs] job saved but Stripe checkout session could not be created — see prior [createFundCheckout] error log for cause"
+      );
+    }
     res.status(201).json({ job, checkoutUrl });
   } catch (err) {
-    console.log("[POST /api/jobs] error:", err instanceof Error ? err.message : String(err));
+    req.log.error(
+      { err: err instanceof Error ? { message: err.message, stack: err.stack } : String(err) },
+      "[POST /api/jobs] unhandled error"
+    );
     throw err;
   }
 });

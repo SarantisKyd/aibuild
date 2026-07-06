@@ -17,7 +17,13 @@ if (Number.isNaN(port) || port <= 0) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
 }
 
-console.log(process.env.STRIPE_SECRET_KEY ? "Stripe loaded: YES" : "Stripe loaded: NO");
+if (process.env.STRIPE_SECRET_KEY) {
+  logger.info("STRIPE_SECRET_KEY loaded from environment");
+} else {
+  logger.warn(
+    "STRIPE_SECRET_KEY not set in environment — will attempt Replit Connectors fallback, which will fail outside Replit (e.g. on Railway)"
+  );
+}
 
 if (process.env.STRIPE_WEBHOOK_SECRET) {
   logger.info("Webhook secret loaded");
