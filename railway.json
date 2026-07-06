@@ -1,8 +1,23 @@
 {
-  "build": {
-    "builder": "NIXPACKS"
-  },
-  "deploy": {
-    "startCommand": "pnpm --filter @workspace/aibuild run start"
+  "$schema": "https://railway.com/railway.schema.json",
+  "services": {
+    "api-server": {
+      "build": {
+        "builder": "NIXPACKS",
+        "buildCommand": "pnpm install --no-frozen-lockfile && pnpm --filter @workspace/api-server build"
+      },
+      "deploy": {
+        "startCommand": "pnpm --filter @workspace/api-server run start"
+      }
+    },
+    "aibuild": {
+      "build": {
+        "builder": "NIXPACKS",
+        "buildCommand": "pnpm install --no-frozen-lockfile && pnpm --filter @workspace/aibuild build"
+      },
+      "deploy": {
+        "startCommand": "pnpm --filter @workspace/aibuild run start"
+      }
+    }
   }
 }
